@@ -33,6 +33,7 @@
   --color-ring: var(--ring);
   --font-display: "Syne", sans-serif;
   --font-body: "Inter", sans-serif;
+  --font-signature: "Caveat", "Dancing Script", cursive;
 }
 
 :root {
