@@ -262,9 +262,10 @@ export function MemoriesGallery() {
 }
 
 function MemoryCard({
-  m, onOpen, onLike, onDelete, onCaption,
+  m, admin, onOpen, onLike, onDelete, onCaption,
 }: {
   m: Memory;
+  admin: boolean;
   onOpen: () => void;
   onLike: () => void;
   onDelete: () => void;
@@ -296,24 +297,33 @@ function MemoryCard({
               stroke={m.liked ? "oklch(0.65 0.24 25)" : "white"}
             />
           </button>
-          <button
-            onClick={onDelete}
-            aria-label="Delete"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-destructive/80"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {admin && (
+            <button
+              onClick={onDelete}
+              aria-label="Delete"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-destructive/80"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <div className="pointer-events-auto p-3">
-          <input
-            value={m.caption}
-            onChange={(e) => onCaption(e.target.value)}
-            placeholder="Add a caption…"
-            maxLength={120}
-            className="w-full rounded-lg border border-white/20 bg-black/40 px-3 py-1.5 text-xs text-white placeholder:text-white/50 backdrop-blur focus:border-primary/60 focus:outline-none"
-          />
-        </div>
+        {admin ? (
+          <div className="pointer-events-auto p-3">
+            <input
+              value={m.caption}
+              onChange={(e) => onCaption(e.target.value)}
+              placeholder="Add a caption…"
+              maxLength={120}
+              className="w-full rounded-lg border border-white/20 bg-black/40 px-3 py-1.5 text-xs text-white placeholder:text-white/50 backdrop-blur focus:border-primary/60 focus:outline-none"
+            />
+          </div>
+        ) : m.caption ? (
+          <div className="pointer-events-auto p-3">
+            <p className="line-clamp-2 text-xs text-white/90">{m.caption}</p>
+          </div>
+        ) : null}
       </div>
+
       {/* Always show liked heart subtly when not hovered */}
       {m.liked && (
         <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/50 px-2 py-1 text-xs opacity-100 transition-opacity group-hover:opacity-0">
