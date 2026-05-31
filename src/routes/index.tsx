@@ -214,6 +214,25 @@ function Index() {
                   </span>
                 ))}
               </div>
+
+              {/* Family */}
+              <div className="mt-7 border-t border-border/60 pt-5">
+                <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-primary">
+                  <Heart className="h-3 w-3" /> Family
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-sm">
+                    <span className="text-base">👨</span>
+                    <span className="text-muted-foreground">Father</span>
+                    <span className="font-semibold text-foreground">Manoj Kumar</span>
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-sm">
+                    <span className="text-base">👩</span>
+                    <span className="text-muted-foreground">Mother</span>
+                    <span className="font-semibold text-foreground">Poonam Devi</span>
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="grid gap-4">
               <InfoTile icon={<Sparkles className="h-4 w-4" />} label="Age" value={`${age} years`} />
