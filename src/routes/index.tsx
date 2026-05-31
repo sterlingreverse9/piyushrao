@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
+import { MemoriesGallery } from "@/components/MemoriesGallery";
 import portrait from "@/assets/piyush-portrait.jpg";
 import {
   MapPin, School, Home, Gamepad2, Code2, GraduationCap,
