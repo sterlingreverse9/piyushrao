@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, Trash2, Upload, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useLock } from "@/components/LockControl";
+
 
 type Memory = {
   id: string;
@@ -44,6 +46,8 @@ export function MemoriesGallery() {
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { unlocked, lockUI } = useLock("piyush.memories.unlocked");
+
 
   // Load
   useEffect(() => {
@@ -128,45 +132,52 @@ export function MemoriesGallery() {
   return (
     <section id="memories" className="relative px-6 py-24 sm:px-10">
       <div className="mx-auto max-w-6xl">
-        <div className="reveal-on-scroll mb-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-primary">— gallery</p>
-          <h2 className="mt-3 text-4xl font-bold sm:text-5xl">📸 Memories</h2>
-          <p className="mt-2 text-muted-foreground italic">Moments I never want to forget</p>
+        <div className="reveal-on-scroll mb-10 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-primary">— gallery</p>
+            <h2 className="mt-3 text-4xl font-bold sm:text-5xl">📸 Memories</h2>
+            <p className="mt-2 text-muted-foreground italic">Moments I never want to forget</p>
+          </div>
+          <div className="shrink-0 pt-2">{lockUI}</div>
         </div>
 
-        {/* Upload zone */}
-        <div
-          onClick={onPick}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          className="group reveal-on-scroll relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all sm:p-10"
-          style={{
-            borderColor: dragOver ? "oklch(0.78 0.20 305)" : "oklch(0.68 0.22 295 / 0.45)",
-            background: dragOver
-              ? "oklch(0.55 0.22 295 / 0.10)"
-              : "oklch(1 0 0 / 0.02)",
-            boxShadow: dragOver ? "0 0 60px -10px oklch(0.78 0.20 305 / 0.55)" : "none",
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && addFiles(e.target.files)}
-          />
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
-              {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+        {/* Upload zone (admin only) */}
+        {unlocked && (
+          <div
+            onClick={onPick}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className="group relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all sm:p-10"
+            style={{
+              borderColor: dragOver ? "oklch(0.78 0.20 305)" : "oklch(0.68 0.22 295 / 0.45)",
+              background: dragOver
+                ? "oklch(0.55 0.22 295 / 0.10)"
+                : "oklch(1 0 0 / 0.02)",
+              boxShadow: dragOver ? "0 0 60px -10px oklch(0.78 0.20 305 / 0.55)" : "none",
+              animation: "reveal .5s ease-out both",
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => e.target.files && addFiles(e.target.files)}
+            />
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+              </div>
+              <p className="text-sm sm:text-base">
+                {busy ? "Processing your memories…" : "Drop your memories here, or click to upload"}
+              </p>
+              <p className="text-xs text-muted-foreground">PNG, JPG, WEBP · multiple at once</p>
             </div>
-            <p className="text-sm sm:text-base">
-              {busy ? "Processing your memories…" : "Drop your memories here, or click to upload"}
-            </p>
-            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP · multiple at once</p>
           </div>
-        </div>
+        )}
+
 
         {/* Grid / empty */}
         {memories.length === 0 ? (
@@ -180,6 +191,7 @@ export function MemoriesGallery() {
               <MemoryCard
                 key={m.id}
                 m={m}
+                admin={unlocked}
                 onOpen={() => setLightbox(i)}
                 onLike={() => toggleLike(m.id)}
                 onDelete={() => remove(m.id)}
@@ -189,7 +201,7 @@ export function MemoriesGallery() {
           </div>
         )}
 
-        {memories.length > 0 && (
+        {unlocked && memories.length > 0 && (
           <div className="mt-10 flex justify-center">
             <button
               onClick={clearAll}
@@ -199,6 +211,7 @@ export function MemoriesGallery() {
             </button>
           </div>
         )}
+
       </div>
 
       {/* Lightbox */}
@@ -249,9 +262,10 @@ export function MemoriesGallery() {
 }
 
 function MemoryCard({
-  m, onOpen, onLike, onDelete, onCaption,
+  m, admin, onOpen, onLike, onDelete, onCaption,
 }: {
   m: Memory;
+  admin: boolean;
   onOpen: () => void;
   onLike: () => void;
   onDelete: () => void;
@@ -283,24 +297,33 @@ function MemoryCard({
               stroke={m.liked ? "oklch(0.65 0.24 25)" : "white"}
             />
           </button>
-          <button
-            onClick={onDelete}
-            aria-label="Delete"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-destructive/80"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {admin && (
+            <button
+              onClick={onDelete}
+              aria-label="Delete"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-destructive/80"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <div className="pointer-events-auto p-3">
-          <input
-            value={m.caption}
-            onChange={(e) => onCaption(e.target.value)}
-            placeholder="Add a caption…"
-            maxLength={120}
-            className="w-full rounded-lg border border-white/20 bg-black/40 px-3 py-1.5 text-xs text-white placeholder:text-white/50 backdrop-blur focus:border-primary/60 focus:outline-none"
-          />
-        </div>
+        {admin ? (
+          <div className="pointer-events-auto p-3">
+            <input
+              value={m.caption}
+              onChange={(e) => onCaption(e.target.value)}
+              placeholder="Add a caption…"
+              maxLength={120}
+              className="w-full rounded-lg border border-white/20 bg-black/40 px-3 py-1.5 text-xs text-white placeholder:text-white/50 backdrop-blur focus:border-primary/60 focus:outline-none"
+            />
+          </div>
+        ) : m.caption ? (
+          <div className="pointer-events-auto p-3">
+            <p className="line-clamp-2 text-xs text-white/90">{m.caption}</p>
+          </div>
+        ) : null}
       </div>
+
       {/* Always show liked heart subtly when not hovered */}
       {m.liked && (
         <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/50 px-2 py-1 text-xs opacity-100 transition-opacity group-hover:opacity-0">

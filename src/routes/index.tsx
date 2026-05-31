@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MemoriesGallery } from "@/components/MemoriesGallery";
+import { useLock } from "@/components/LockControl";
 import portrait from "@/assets/piyush-portrait.jpg";
 import {
   MapPin, School, Home, Gamepad2, Code2, GraduationCap,
   Mail, MessageCircle, Send, Instagram, Phone, Sparkles, Star,
-  Users, Stethoscope, BookOpen, Target, Heart
+  Users, Stethoscope, BookOpen, Target, Heart, Camera, Trash2
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -399,32 +401,8 @@ function Index() {
       </section>
 
       {/* FRIENDS */}
-      <section id="friends" className="relative px-6 py-24 sm:px-10">
-        <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="circle" title="My Circle 🤝" />
-          <p className="reveal-on-scroll mt-4 max-w-xl text-sm text-muted-foreground">
-            The people who make ordinary days unforgettable.
-          </p>
-          <div className="reveal-on-scroll mt-12 flex flex-wrap gap-4">
-            {friends.map((name, i) => (
-              <div
-                key={name}
-                className="group relative flex h-32 w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 p-3 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)] sm:h-36 sm:w-36"
-                style={{ background: friendGradients[i % friendGradients.length] }}
-              >
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: "radial-gradient(circle at 50% 0%, oklch(1 0 0 / 0.18), transparent 70%)" }}
-                />
-                <span className="relative font-display text-5xl font-extrabold text-white drop-shadow-lg sm:text-6xl">
-                  {name.charAt(0)}
-                </span>
-                <span className="relative mt-1 text-sm font-semibold text-white/90">{name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FriendsSection />
+
 
       {/* JOURNEY */}
       <section id="journey" className="relative px-6 py-24 sm:px-10">
@@ -617,6 +595,167 @@ function PlaceCard({
       >
         <MapPin className="h-4 w-4" /> Open in Google Maps
       </a>
+    </div>
+  );
+}
+
+const FRIEND_PHOTO_PREFIX = "friend_photo_";
+
+function compressTo(file: File, maxW = 480): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode"));
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const ctx = c.getContext("2d");
+        if (!ctx) return reject(new Error("ctx"));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function FriendsSection() {
+  const { unlocked, lockUI } = useLock("piyush.friends.unlocked");
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const name of friends) {
+      try {
+        const v = localStorage.getItem(FRIEND_PHOTO_PREFIX + name);
+        if (v) next[name] = v;
+      } catch { /* ignore */ }
+    }
+    setPhotos(next);
+  }, []);
+
+  const setPhoto = async (name: string, file: File) => {
+    try {
+      const data = await compressTo(file);
+      localStorage.setItem(FRIEND_PHOTO_PREFIX + name, data);
+      setPhotos((p) => ({ ...p, [name]: data }));
+    } catch (e) {
+      console.warn("photo failed", e);
+    }
+  };
+
+  const removePhoto = (name: string) => {
+    try { localStorage.removeItem(FRIEND_PHOTO_PREFIX + name); } catch { /* ignore */ }
+    setPhotos((p) => {
+      const n = { ...p };
+      delete n[name];
+      return n;
+    });
+  };
+
+  return (
+    <section id="friends" className="relative px-6 py-24 sm:px-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="reveal-on-scroll flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-primary">— circle</p>
+            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">My Circle 🤝</h2>
+          </div>
+          <div className="shrink-0 pt-2">{lockUI}</div>
+        </div>
+        <p className="reveal-on-scroll mt-4 max-w-xl text-sm text-muted-foreground">
+          The people who make ordinary days unforgettable.
+        </p>
+        <div className="reveal-on-scroll mt-12 flex flex-wrap gap-4">
+          {friends.map((name, i) => (
+            <FriendCard
+              key={name}
+              name={name}
+              gradient={friendGradients[i % friendGradients.length]}
+              photo={photos[name]}
+              admin={unlocked}
+              onUpload={(f) => setPhoto(name, f)}
+              onRemove={() => removePhoto(name)}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FriendCard({
+  name, gradient, photo, admin, onUpload, onRemove,
+}: {
+  name: string;
+  gradient: string;
+  photo?: string;
+  admin: boolean;
+  onUpload: (f: File) => void;
+  onRemove: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div
+      className="group relative flex h-32 w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 p-3 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)] sm:h-36 sm:w-36"
+      style={{ background: gradient }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: "radial-gradient(circle at 50% 0%, oklch(1 0 0 / 0.18), transparent 70%)" }}
+      />
+      {photo ? (
+        <img
+          src={photo}
+          alt={name}
+          className="relative h-16 w-16 rounded-full object-cover ring-2 ring-white/40 sm:h-20 sm:w-20"
+        />
+      ) : (
+        <span className="relative font-display text-5xl font-extrabold text-white drop-shadow-lg sm:text-6xl">
+          {name.charAt(0)}
+        </span>
+      )}
+      <span className="relative mt-1 text-sm font-semibold text-white/90">{name}</span>
+
+      {admin && (
+        <>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onUpload(f);
+              e.target.value = "";
+            }}
+          />
+          <div className="pointer-events-none absolute right-1.5 top-1.5 flex flex-col gap-1.5 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
+            <button
+              onClick={() => inputRef.current?.click()}
+              aria-label={`Upload photo for ${name}`}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-primary"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+            {photo && (
+              <button
+                onClick={onRemove}
+                aria-label={`Remove photo for ${name}`}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
