@@ -401,32 +401,8 @@ function Index() {
       </section>
 
       {/* FRIENDS */}
-      <section id="friends" className="relative px-6 py-24 sm:px-10">
-        <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="circle" title="My Circle 🤝" />
-          <p className="reveal-on-scroll mt-4 max-w-xl text-sm text-muted-foreground">
-            The people who make ordinary days unforgettable.
-          </p>
-          <div className="reveal-on-scroll mt-12 flex flex-wrap gap-4">
-            {friends.map((name, i) => (
-              <div
-                key={name}
-                className="group relative flex h-32 w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 p-3 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)] sm:h-36 sm:w-36"
-                style={{ background: friendGradients[i % friendGradients.length] }}
-              >
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: "radial-gradient(circle at 50% 0%, oklch(1 0 0 / 0.18), transparent 70%)" }}
-                />
-                <span className="relative font-display text-5xl font-extrabold text-white drop-shadow-lg sm:text-6xl">
-                  {name.charAt(0)}
-                </span>
-                <span className="relative mt-1 text-sm font-semibold text-white/90">{name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FriendsSection />
+
 
       {/* JOURNEY */}
       <section id="journey" className="relative px-6 py-24 sm:px-10">
