@@ -46,6 +46,8 @@ export function MemoriesGallery() {
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { unlocked, lockUI } = useLock("piyush.memories.unlocked");
+
 
   // Load
   useEffect(() => {
