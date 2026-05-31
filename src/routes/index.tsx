@@ -475,6 +475,9 @@ function Index() {
         </div>
       </section>
 
+      {/* MEMORIES GALLERY */}
+      <MemoriesGallery />
+
       {/* SIGNATURE */}
       <section id="signature" className="relative overflow-hidden px-6 py-24 sm:px-10">
         <div
