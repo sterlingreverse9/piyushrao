@@ -293,6 +293,87 @@ function Index() {
         </div>
       </section>
 
+      {/* ACADEMICS */}
+      <section id="academics" className="relative px-6 py-24 sm:px-10">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle eyebrow="academics" title="Books & dreams" />
+          <div className="reveal-on-scroll mt-12 grid gap-6 md:grid-cols-3">
+            {/* 10th */}
+            <div
+              className="glass glass-hover relative overflow-hidden p-6"
+              style={{ borderColor: "oklch(0.70 0.18 150 / 0.3)" }}
+            >
+              <div
+                className="absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-30 blur-3xl"
+                style={{ background: "oklch(0.65 0.22 150)" }}
+              />
+              <div
+                className="relative flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: "oklch(0.65 0.22 150 / 0.18)", color: "oklch(0.78 0.18 150)" }}
+              >
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <p className="relative mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">10th Grade</p>
+              <h3 className="relative mt-1 font-display text-4xl font-extrabold">
+                <span style={{ color: "oklch(0.82 0.18 150)" }}>79.9%</span>
+              </h3>
+              <p className="relative mt-2 text-sm text-muted-foreground">GMSSSS Mahendergarh</p>
+            </div>
+
+            {/* 11/12 */}
+            <div className="glass glass-hover p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <p className="mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">11th & 12th</p>
+              <h3 className="mt-1 font-display text-2xl font-bold">Science · PCB</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Physics, Chemistry, Biology at GMSSSS Mahendergarh.
+              </p>
+            </div>
+
+            {/* NEET */}
+            <div
+              className="glass glass-hover relative overflow-hidden p-6"
+              style={{ borderColor: "oklch(0.70 0.18 150 / 0.4)" }}
+            >
+              <div
+                className="absolute inset-0 opacity-25"
+                style={{
+                  background: "radial-gradient(circle at 70% 30%, oklch(0.65 0.22 150 / 0.45), transparent 60%)",
+                }}
+              />
+              <div
+                className="relative flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: "oklch(0.65 0.22 150 / 0.2)", color: "oklch(0.80 0.20 150)" }}
+              >
+                <Stethoscope className="h-5 w-5" />
+              </div>
+              <p className="relative mt-5 text-[11px] uppercase tracking-widest" style={{ color: "oklch(0.80 0.18 150)" }}>
+                Preparing for
+              </p>
+              <h3 className="relative mt-1 font-display text-2xl font-bold">NEET UG 2027</h3>
+              <p className="relative mt-2 text-sm text-muted-foreground">
+                Chasing the white coat, one chapter at a time.
+              </p>
+              <div className="relative mt-5">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold animate-neet-pulse"
+                  style={{
+                    background: "linear-gradient(135deg, oklch(0.55 0.22 150 / 0.25), oklch(0.65 0.22 160 / 0.15))",
+                    border: "1px solid oklch(0.70 0.20 150 / 0.5)",
+                    color: "oklch(0.88 0.16 150)",
+                  }}
+                >
+                  <Target className="h-4 w-4" />
+                  NEET UG 2027 Aspirant
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PLACES */}
       <section id="places" className="relative px-6 py-24 sm:px-10">
         <div className="mx-auto max-w-6xl">
