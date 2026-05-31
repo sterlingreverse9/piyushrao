@@ -49,6 +49,27 @@ const timeline = [
   { years: "9th – 12th", name: "GMSSSS Mahendergarh", place: "Currently here", current: true },
 ];
 
+const friends = [
+  "Harsh", "Rohit", "Rihan", "Aditya", "Ashwani", "Vashu", "Jatin",
+  "Naveen", "Lucky", "Shivam", "Happy", "Krish", "JP",
+];
+
+const friendGradients = [
+  "linear-gradient(135deg, oklch(0.45 0.18 295), oklch(0.35 0.15 320))",
+  "linear-gradient(135deg, oklch(0.42 0.16 260), oklch(0.32 0.14 290))",
+  "linear-gradient(135deg, oklch(0.45 0.18 340), oklch(0.35 0.16 10))",
+  "linear-gradient(135deg, oklch(0.42 0.15 200), oklch(0.32 0.14 240))",
+  "linear-gradient(135deg, oklch(0.45 0.16 160), oklch(0.35 0.15 200))",
+  "linear-gradient(135deg, oklch(0.48 0.18 30), oklch(0.36 0.16 60))",
+  "linear-gradient(135deg, oklch(0.44 0.17 280), oklch(0.34 0.14 250))",
+  "linear-gradient(135deg, oklch(0.46 0.16 120), oklch(0.34 0.14 160))",
+  "linear-gradient(135deg, oklch(0.45 0.18 310), oklch(0.35 0.15 340))",
+  "linear-gradient(135deg, oklch(0.42 0.15 220), oklch(0.32 0.14 260))",
+  "linear-gradient(135deg, oklch(0.48 0.17 50), oklch(0.36 0.15 25))",
+  "linear-gradient(135deg, oklch(0.44 0.16 180), oklch(0.34 0.14 215))",
+  "linear-gradient(135deg, oklch(0.46 0.18 330), oklch(0.36 0.15 295))",
+];
+
 function useReveal() {
   useEffect(() => {
     const els = document.querySelectorAll(".reveal-on-scroll");
