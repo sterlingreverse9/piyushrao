@@ -474,6 +474,58 @@ function Index() {
         </div>
       </section>
 
+      {/* SIGNATURE */}
+      <section id="signature" className="relative overflow-hidden px-6 py-24 sm:px-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "radial-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          style={{ background: "oklch(0.55 0.22 295 / 0.18)" }}
+        />
+        <div className="reveal-on-scroll relative mx-auto flex max-w-3xl flex-col items-center text-center">
+          <p className="text-[11px] uppercase tracking-[0.35em] text-primary">signed</p>
+          <div className="relative mt-6 inline-block">
+            <h2
+              className="font-signature text-[clamp(4.5rem,16vw,7rem)] font-bold leading-none text-foreground"
+              style={{
+                transform: "rotate(-3deg)",
+                textShadow: "0 0 30px oklch(0.78 0.20 305 / 0.45), 0 0 60px oklch(0.68 0.22 295 / 0.25)",
+              }}
+            >
+              Piyush
+            </h2>
+            <svg
+              viewBox="0 0 320 40"
+              className="mx-auto -mt-2 block w-[80%] sm:w-[70%]"
+              fill="none"
+              style={{ transform: "rotate(-3deg)" }}
+            >
+              <path
+                d="M5 25 C 60 5, 120 35, 180 18 S 290 30, 315 12"
+                stroke="url(#sig-grad)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <defs>
+                <linearGradient id="sig-grad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="oklch(0.68 0.22 295)" />
+                  <stop offset="100%" stopColor="oklch(0.78 0.20 325)" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <p className="mt-8 text-sm text-muted-foreground">
+            — Made with <span className="text-[oklch(0.72_0.18_240)]">💙</span> by Piyush
+          </p>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="relative border-t border-border px-6 py-10 sm:px-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
