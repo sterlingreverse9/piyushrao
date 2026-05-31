@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MemoriesGallery } from "@/components/MemoriesGallery";
+import { useLock } from "@/components/LockControl";
 import portrait from "@/assets/piyush-portrait.jpg";
 import {
   MapPin, School, Home, Gamepad2, Code2, GraduationCap,
   Mail, MessageCircle, Send, Instagram, Phone, Sparkles, Star,
-  Users, Stethoscope, BookOpen, Target, Heart
+  Users, Stethoscope, BookOpen, Target, Heart, Camera, Trash2
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
