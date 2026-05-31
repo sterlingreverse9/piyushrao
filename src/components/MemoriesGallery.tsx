@@ -132,45 +132,52 @@ export function MemoriesGallery() {
   return (
     <section id="memories" className="relative px-6 py-24 sm:px-10">
       <div className="mx-auto max-w-6xl">
-        <div className="reveal-on-scroll mb-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-primary">— gallery</p>
-          <h2 className="mt-3 text-4xl font-bold sm:text-5xl">📸 Memories</h2>
-          <p className="mt-2 text-muted-foreground italic">Moments I never want to forget</p>
+        <div className="reveal-on-scroll mb-10 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-primary">— gallery</p>
+            <h2 className="mt-3 text-4xl font-bold sm:text-5xl">📸 Memories</h2>
+            <p className="mt-2 text-muted-foreground italic">Moments I never want to forget</p>
+          </div>
+          <div className="shrink-0 pt-2">{lockUI}</div>
         </div>
 
-        {/* Upload zone */}
-        <div
-          onClick={onPick}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          className="group reveal-on-scroll relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all sm:p-10"
-          style={{
-            borderColor: dragOver ? "oklch(0.78 0.20 305)" : "oklch(0.68 0.22 295 / 0.45)",
-            background: dragOver
-              ? "oklch(0.55 0.22 295 / 0.10)"
-              : "oklch(1 0 0 / 0.02)",
-            boxShadow: dragOver ? "0 0 60px -10px oklch(0.78 0.20 305 / 0.55)" : "none",
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && addFiles(e.target.files)}
-          />
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
-              {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+        {/* Upload zone (admin only) */}
+        {unlocked && (
+          <div
+            onClick={onPick}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className="group relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all sm:p-10"
+            style={{
+              borderColor: dragOver ? "oklch(0.78 0.20 305)" : "oklch(0.68 0.22 295 / 0.45)",
+              background: dragOver
+                ? "oklch(0.55 0.22 295 / 0.10)"
+                : "oklch(1 0 0 / 0.02)",
+              boxShadow: dragOver ? "0 0 60px -10px oklch(0.78 0.20 305 / 0.55)" : "none",
+              animation: "reveal .5s ease-out both",
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => e.target.files && addFiles(e.target.files)}
+            />
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+              </div>
+              <p className="text-sm sm:text-base">
+                {busy ? "Processing your memories…" : "Drop your memories here, or click to upload"}
+              </p>
+              <p className="text-xs text-muted-foreground">PNG, JPG, WEBP · multiple at once</p>
             </div>
-            <p className="text-sm sm:text-base">
-              {busy ? "Processing your memories…" : "Drop your memories here, or click to upload"}
-            </p>
-            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP · multiple at once</p>
           </div>
-        </div>
+        )}
+
 
         {/* Grid / empty */}
         {memories.length === 0 ? (
