@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, Trash2, Upload, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useLock } from "@/components/LockControl";
+
 
 type Memory = {
   id: string;
