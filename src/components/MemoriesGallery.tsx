@@ -191,6 +191,7 @@ export function MemoriesGallery() {
               <MemoryCard
                 key={m.id}
                 m={m}
+                admin={unlocked}
                 onOpen={() => setLightbox(i)}
                 onLike={() => toggleLike(m.id)}
                 onDelete={() => remove(m.id)}
@@ -200,7 +201,7 @@ export function MemoriesGallery() {
           </div>
         )}
 
-        {memories.length > 0 && (
+        {unlocked && memories.length > 0 && (
           <div className="mt-10 flex justify-center">
             <button
               onClick={clearAll}
@@ -210,6 +211,7 @@ export function MemoriesGallery() {
             </button>
           </div>
         )}
+
       </div>
 
       {/* Lightbox */}
