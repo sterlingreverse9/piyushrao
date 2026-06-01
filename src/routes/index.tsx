@@ -184,6 +184,7 @@ const [showWelcome, setShowWelcome] = useState(() => {
   return (
     <div id="top" className="relative z-10 min-h-screen font-body">
       <StickyNav />
+<MusicPlayer adminPassword="qwer@$()" />
 {showWelcome && (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -729,5 +730,143 @@ function FriendCard({ name, gradient, photo, admin, onUpload, onRemove }: {
         </>
       )}
     </div>
+  );
+}
+}
+
+function MusicPlayer({ adminPassword }: { adminPassword: string }) {
+  const SONGS = [
+    { name: "Lofi Chill", url: "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" },
+    { name: "Relaxing Beats", url: "https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3" },
+    { name: "Ambient Vibes", url: "https://cdn.pixabay.com/audio/2023/01/09/audio_8b4f8b0a1c.mp3" },
+  ];
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const [songs, setSongs] = useState(SONGS);
+  const [newSongName, setNewSongName] = useState("");
+  const [newSongUrl, setNewSongUrl] = useState("");
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.src = songs[currentIndex]?.url || "";
+      if (playing) audioRef.current.play().catch(() => setPlaying(false));
+    }
+  }, [currentIndex, songs]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play().catch(() => {}); setPlaying(true); }
+  };
+
+  const prev = () => setCurrentIndex((i) => (i - 1 + songs.length) % songs.length);
+  const next = () => setCurrentIndex((i) => (i + 1) % songs.length);
+
+  const unlockAdmin = () => {
+    if (pwInput === adminPassword) { setAdminUnlocked(true); setAdminOpen(false); setPwError(false); }
+    else { setPwError(true); }
+  };
+
+  const addSong = () => {
+    if (!newSongName.trim() || !newSongUrl.trim()) return;
+    setSongs((s) => [...s, { name: newSongName.trim(), url: newSongUrl.trim() }]);
+    setNewSongName(""); setNewSongUrl("");
+  };
+
+  return (
+    <>
+      <audio ref={audioRef} loop onEnded={next} />
+      <div className="fixed bottom-5 left-5 z-50 flex flex-col gap-2">
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.18 0.05 295 / 0.92), oklch(0.13 0.04 270 / 0.95))",
+            border: "1px solid oklch(0.65 0.22 295 / 0.3)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 8px 32px oklch(0.55 0.25 295 / 0.2)",
+          }}
+        >
+          <div className="flex flex-col" style={{ minWidth: "80px", maxWidth: "120px" }}>
+            <span className="text-[10px] uppercase tracking-widest" style={{ color: "oklch(0.65 0.22 295)" }}>Now Playing</span>
+            <span className="truncate text-xs font-semibold text-foreground">{songs[currentIndex]?.name}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {adminUnlocked && (
+              <button onClick={prev} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">⏮</button>
+            )}
+            <button onClick={togglePlay}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground transition-all hover:scale-105"
+              style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}>
+              {playing ? "⏸" : "▶"}
+            </button>
+            {adminUnlocked && (
+              <button onClick={next} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">⏭</button>
+            )}
+          </div>
+          <input type="range" min="0" max="1" step="0.01" value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            className="w-16 accent-primary cursor-pointer" />
+          <button onClick={() => setAdminOpen(!adminOpen)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {adminUnlocked ? "🔓" : "🔒"}
+          </button>
+        </div>
+        {adminOpen && (
+          <div className="rounded-2xl p-4"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.18 0.05 295 / 0.95), oklch(0.13 0.04 270 / 0.98))",
+              border: "1px solid oklch(0.65 0.22 295 / 0.3)",
+              backdropFilter: "blur(16px)",
+            }}>
+            {!adminUnlocked ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground">Admin password</p>
+                <input type="password" value={pwInput} onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+                  placeholder="••••••••"
+                  className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60"
+                  style={{ borderColor: pwError ? "red" : undefined }} />
+                {pwError && <p className="text-[10px] text-red-400">Wrong password</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => setAdminOpen(false)} className="flex-1 rounded-full border border-border px-2 py-1 text-xs">Cancel</button>
+                  <button onClick={unlockAdmin} className="flex-1 rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">Unlock</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold text-foreground">Manage Songs</p>
+                {songs.map((s, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2">
+                    <span className="truncate text-xs text-muted-foreground">{s.name}</span>
+                    <button onClick={() => setSongs((ss) => ss.filter((_, j) => j !== i))}
+                      className="text-xs text-red-400 hover:text-red-300">✕</button>
+                  </div>
+                ))}
+                <div className="flex flex-col gap-1.5 border-t border-border pt-2">
+                  <input value={newSongName} onChange={(e) => setNewSongName(e.target.value)} placeholder="Song name"
+                    className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60" />
+                  <input value={newSongUrl} onChange={(e) => setNewSongUrl(e.target.value)} placeholder="MP3 URL"
+                    className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60" />
+                  <button onClick={addSong} className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">+ Add Song</button>
+                </div>
+                <button onClick={() => { setAdminUnlocked(false); setAdminOpen(false); }}
+                  className="text-xs text-muted-foreground hover:text-foreground">Lock 🔒</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
