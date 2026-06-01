@@ -555,7 +555,7 @@ function FriendsSection() {
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
+    // setLoading(true);
     const { data } = await supabase.storage.from(BUCKETS.friends).list("", { limit: 200 });
     const next: Record<string, { path: string; url: string }> = {};
     for (const name of friends) {
