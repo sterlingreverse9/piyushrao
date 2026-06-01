@@ -732,7 +732,6 @@ function FriendCard({ name, gradient, photo, admin, onUpload, onRemove }: {
     </div>
   );
 }
-}
 
 function MusicPlayer({ adminPassword }: { adminPassword: string }) {
   const SONGS = [
