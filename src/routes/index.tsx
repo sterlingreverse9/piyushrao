@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MemoriesGallery } from "@/components/MemoriesGallery";
+import { TeachersSection } from "@/components/TeachersSection";
+import { ProjectsSection } from "@/components/ProjectsSection";
+import { NotesSection } from "@/components/NotesSection";
 import { useLock } from "@/components/LockControl";
+import { LanguageToggle, useT } from "@/lib/i18n";
+import { supabase, BUCKETS, publicUrl, compressImage } from "@/lib/supabaseClient";
 import portrait from "@/assets/piyush-portrait.jpg";
 import {
   MapPin, School, Home, Gamepad2, Code2, GraduationCap,
-  Mail, MessageCircle, Send, Instagram, Phone, Sparkles, Star,
-  Users, Stethoscope, BookOpen, Target, Heart, Camera, Trash2
+  Mail, Send, Instagram, Phone, Sparkles, Star,
+  Stethoscope, BookOpen, Target, Heart, Camera, Trash2, Loader2
 } from "lucide-react";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,7 +25,7 @@ export const Route = createFileRoute("/")({
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600&family=Caveat:wght@500;700&family=Dancing+Script:wght@600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600&family=Caveat:wght@500;700&family=Dancing+Script:wght@600;700&family=Hind:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap" },
     ],
   }),
   component: Index,
@@ -54,7 +58,7 @@ const timeline = [
 
 const friends = [
   "Harsh", "Rohit", "Rihan", "Aditya", "Ashwani", "Vashu", "Jatin",
-  "Naveen", "Lucky", "Shivam", "Happy", "Krish", "JP",
+  "Naveen", "Lucky", "Shivam", "Happy", "Krish", "JP", "Paras",
 ];
 
 const friendGradients = [
@@ -71,6 +75,7 @@ const friendGradients = [
   "linear-gradient(135deg, oklch(0.48 0.17 50), oklch(0.36 0.15 25))",
   "linear-gradient(135deg, oklch(0.44 0.16 180), oklch(0.34 0.14 215))",
   "linear-gradient(135deg, oklch(0.46 0.18 330), oklch(0.36 0.15 295))",
+  "linear-gradient(135deg, oklch(0.50 0.20 85), oklch(0.38 0.17 110))", // Paras — unique amber/lime
 ];
 
 function useReveal() {
@@ -122,36 +127,68 @@ function Particles() {
   );
 }
 
+function StickyNav() {
+  const { t } = useT();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const links: { href: string; key: any }[] = [
+    { href: "#about", key: "nav_about" },
+    { href: "#teachers", key: "nav_teachers" },
+    { href: "#friends", key: "nav_friends" },
+    { href: "#memories", key: "nav_memories" },
+    { href: "#projects", key: "nav_projects" },
+    { href: "#connect", key: "nav_contact" },
+    { href: "#notes", key: "nav_notes" },
+  ];
+  return (
+    <nav
+      className="fixed inset-x-0 top-0 z-40 transition-all"
+      style={{
+        background: scrolled ? "oklch(0.13 0.02 285 / 0.75)" : "transparent",
+        backdropFilter: scrolled ? "blur(14px) saturate(140%)" : "none",
+        borderBottom: scrolled ? "1px solid oklch(1 0 0 / 0.06)" : "1px solid transparent",
+      }}
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 sm:px-10">
+        <a href="#top" className="font-display text-xl font-bold tracking-tight">
+          P<span className="text-gradient">.</span>
+        </a>
+        <div className="hidden gap-6 text-xs text-muted-foreground md:flex">
+          {links.map((l) => (
+            <a key={l.href} href={l.href} className="transition-colors hover:text-foreground">{t(l.key)}</a>
+          ))}
+        </div>
+        <LanguageToggle />
+      </div>
+    </nav>
+  );
+}
+
 function Index() {
   useReveal();
+  const { t } = useT();
   const dob = useMemo(() => new Date(2009, 6, 26), []);
   const age = calcAge(dob);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative z-10 min-h-screen font-body">
+    <div id="top" className="relative z-10 min-h-screen font-body">
+      <StickyNav />
+
       {/* HERO */}
-      <section className="relative min-h-screen overflow-hidden px-6 pt-20 pb-16 sm:px-10">
+      <section className="relative min-h-screen overflow-hidden px-6 pt-24 pb-16 sm:px-10">
         <Particles />
-        {/* blobs */}
         <div className="pointer-events-none absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full blur-3xl animate-blob"
              style={{ background: "oklch(0.55 0.25 295 / 0.35)" }} />
         <div className="pointer-events-none absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full blur-3xl animate-blob"
              style={{ background: "oklch(0.50 0.22 320 / 0.30)", animationDelay: "-6s" }} />
 
-        <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between">
-          <span className="font-display text-xl font-bold tracking-tight">
-            P<span className="text-gradient">.</span>
-          </span>
-          <div className="hidden gap-8 text-sm text-muted-foreground sm:flex">
-            <a href="#about" className="hover:text-foreground transition-colors">About</a>
-            <a href="#connect" className="hover:text-foreground transition-colors">Connect</a>
-            <a href="#places" className="hover:text-foreground transition-colors">Places</a>
-            <a href="#journey" className="hover:text-foreground transition-colors">Journey</a>
-          </div>
-        </nav>
-
-        <div className="relative z-10 mx-auto mt-12 grid max-w-6xl items-center gap-12 lg:mt-20 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative z-10 mx-auto mt-8 grid max-w-6xl items-center gap-12 lg:mt-16 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="reveal-on-scroll order-2 lg:order-1">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -178,17 +215,13 @@ function Index() {
             </div>
           </div>
 
-          {/* Portrait card */}
           <div className="reveal-on-scroll order-1 mx-auto lg:order-2">
             <div className="relative">
               <div className="absolute -inset-6 rounded-[2rem] blur-2xl"
                    style={{ background: "var(--gradient-violet)", opacity: 0.4 }} />
               <div className="relative glass overflow-hidden p-3 animate-float glow-ring">
-                <img
-                  src={portrait}
-                  alt="Portrait of Piyush"
-                  className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]"
-                />
+                <img src={portrait} alt="Portrait of Piyush"
+                  className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]" />
                 <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-background/60 px-4 py-2.5 backdrop-blur">
                   <span className="font-display text-sm font-bold">PIYUSH</span>
                   <span className="text-xs text-muted-foreground">2026 · HR</span>
@@ -202,7 +235,7 @@ function Index() {
       {/* ABOUT */}
       <section id="about" className="relative px-6 py-24 sm:px-10">
         <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="about" title="A little bit of me" />
+          <SectionTitle eyebrow="about" title={t("about_me")} />
           <div className="reveal-on-scroll mt-12 grid gap-6 md:grid-cols-3">
             <div className="glass glass-hover p-6 md:col-span-2">
               <p className="text-lg leading-relaxed text-foreground/90">
@@ -211,14 +244,13 @@ function Index() {
                 spending my hours between schoolbooks, controllers, and chaotic late-night coding sessions.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {["🎮 Gaming", "💻 Vibe Coding", "🌙 Night Owl", "🎧 Lo-fi", "✨ Building stuff"].map((t) => (
-                  <span key={t} className="rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
-                    {t}
+                {["🎮 Gaming", "💻 Vibe Coding", "🌙 Night Owl", "🎧 Lo-fi", "✨ Building stuff"].map((tag) => (
+                  <span key={tag} className="rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
+                    {tag}
                   </span>
                 ))}
               </div>
 
-              {/* Family */}
               <div className="mt-7 border-t border-border/60 pt-5">
                 <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-primary">
                   <Heart className="h-3 w-3" /> Family
@@ -245,43 +277,146 @@ function Index() {
           </div>
 
           <div className="reveal-on-scroll mt-6 grid gap-6 sm:grid-cols-2">
-            <HobbyCard
-              Icon={Gamepad2}
-              title="Gaming"
-              text="From competitive shooters to chill story-mode nights — gaming is my reset button."
-            />
-            <HobbyCard
-              Icon={Code2}
-              title="Vibe Coding"
-              text="Half art, half logic. I build things because the idea won't stop bugging me."
-            />
+            <HobbyCard Icon={Gamepad2} title="Gaming"
+              text="From competitive shooters to chill story-mode nights — gaming is my reset button." />
+            <HobbyCard Icon={Code2} title="Vibe Coding"
+              text="Half art, half logic. I build things because the idea won't stop bugging me." />
           </div>
         </div>
       </section>
 
-      {/* CONNECT */}
+      {/* ACADEMICS */}
+      <section id="academics" className="relative px-6 py-24 sm:px-10">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle eyebrow="academics" title="Books & dreams" />
+          <div className="reveal-on-scroll mt-12 grid gap-6 md:grid-cols-3">
+            <div className="glass glass-hover relative overflow-hidden p-6" style={{ borderColor: "oklch(0.70 0.18 150 / 0.3)" }}>
+              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-30 blur-3xl" style={{ background: "oklch(0.65 0.22 150)" }} />
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: "oklch(0.65 0.22 150 / 0.18)", color: "oklch(0.78 0.18 150)" }}>
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <p className="relative mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">10th Grade</p>
+              <h3 className="relative mt-1 font-display text-4xl font-extrabold">
+                <span style={{ color: "oklch(0.82 0.18 150)" }}>79.9%</span>
+              </h3>
+              <p className="relative mt-2 text-sm text-muted-foreground">GMSSSS Mahendergarh</p>
+            </div>
+
+            <div className="glass glass-hover p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <p className="mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">11th & 12th</p>
+              <h3 className="mt-1 font-display text-2xl font-bold">Science · PCB</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Physics, Chemistry, Biology at GMSSSS Mahendergarh.</p>
+            </div>
+
+            <div className="glass glass-hover relative overflow-hidden p-6" style={{ borderColor: "oklch(0.70 0.18 150 / 0.4)" }}>
+              <div className="absolute inset-0 opacity-25"
+                style={{ background: "radial-gradient(circle at 70% 30%, oklch(0.65 0.22 150 / 0.45), transparent 60%)" }} />
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: "oklch(0.65 0.22 150 / 0.2)", color: "oklch(0.80 0.20 150)" }}>
+                <Stethoscope className="h-5 w-5" />
+              </div>
+              <p className="relative mt-5 text-[11px] uppercase tracking-widest" style={{ color: "oklch(0.80 0.18 150)" }}>
+                Preparing for
+              </p>
+              <h3 className="relative mt-1 font-display text-2xl font-bold">NEET UG 2027</h3>
+              <p className="relative mt-2 text-sm text-muted-foreground">Chasing the white coat, one chapter at a time.</p>
+              <div className="relative mt-5">
+                <span className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold animate-neet-pulse"
+                  style={{
+                    background: "linear-gradient(135deg, oklch(0.55 0.22 150 / 0.25), oklch(0.65 0.22 160 / 0.15))",
+                    border: "1px solid oklch(0.70 0.20 150 / 0.5)",
+                    color: "oklch(0.88 0.16 150)",
+                  }}>
+                  <Target className="h-4 w-4" /> NEET UG 2027 Aspirant
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PLACES */}
+      <section id="places" className="relative px-6 py-24 sm:px-10">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle eyebrow="places" title="Where you'll find me" />
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <PlaceCard Icon={Home} eyebrow="home" title="Majra Kalan" subtitle="Mahendergarh, Haryana"
+              href="https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA" />
+            <PlaceCard Icon={School} eyebrow="school" title="GMSSSS Mahendergarh" subtitle="Currently 12th standard"
+              href="https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9" />
+          </div>
+        </div>
+      </section>
+
+      {/* JOURNEY / SCHOOL HISTORY */}
+      <section id="journey" className="relative px-6 py-24 sm:px-10">
+        <div className="mx-auto max-w-4xl">
+          <SectionTitle eyebrow="journey" title={t("school_history")} />
+          <div ref={timelineRef} className="relative mt-16 pl-8 sm:pl-12">
+            <div className="absolute left-2 top-2 bottom-2 w-px origin-top sm:left-4"
+              style={{
+                background: "linear-gradient(to bottom, transparent, var(--primary) 15%, var(--primary-glow) 85%, transparent)",
+                animation: "draw-line 1.8s ease-out forwards",
+              }} />
+            {timeline.map((tm, i) => (
+              <div key={i} className="reveal-on-scroll relative mb-8 last:mb-0" style={{ animationDelay: `${i * 100}ms` }}>
+                <div className="absolute -left-[26px] top-4 flex h-4 w-4 items-center justify-center rounded-full sm:-left-[34px]"
+                  style={{
+                    background: tm.current ? "var(--primary-glow)" : "var(--primary)",
+                    boxShadow: tm.current
+                      ? "0 0 0 4px oklch(0.78 0.20 305 / 0.25), 0 0 20px var(--primary-glow)"
+                      : "0 0 0 4px oklch(0.68 0.22 295 / 0.15)",
+                  }} />
+                <div className={`glass glass-hover p-5 ${tm.current ? "border-primary/40" : ""}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest text-primary">{tm.years}</p>
+                      <h3 className="mt-1 font-display text-lg font-bold sm:text-xl">{tm.name}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{tm.place}</p>
+                    </div>
+                    {tm.current && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        <Star className="h-3 w-3 fill-current" /> now
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TEACHERS */}
+      <TeachersSection />
+
+      {/* FRIENDS */}
+      <FriendsSection />
+
+      {/* MEMORIES */}
+      <MemoriesGallery />
+
+      {/* PROJECTS */}
+      <ProjectsSection />
+
+      {/* CONTACT */}
       <section id="connect" className="relative px-6 py-24 sm:px-10">
         <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="connect" title="Find me online" />
+          <SectionTitle eyebrow="contact" title={t("contact")} />
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {socials.map((s, i) => (
-              <a
-                key={i}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
                 className="reveal-on-scroll glass glass-hover group relative block overflow-hidden p-6"
-                style={{ ["--brand" as any]: s.color }}
-              >
-                <div
-                  className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-60"
-                  style={{ background: s.color }}
-                />
+                style={{ ["--brand" as any]: s.color }}>
+                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-60"
+                  style={{ background: s.color }} />
                 <div className="relative flex items-start justify-between">
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
-                    style={{ background: `color-mix(in oklab, ${s.color} 20%, transparent)`, color: s.color }}
-                  >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                    style={{ background: `color-mix(in oklab, ${s.color} 20%, transparent)`, color: s.color }}>
                     <s.Icon className="h-5 w-5" />
                   </div>
                   <span className="text-xs uppercase tracking-widest text-muted-foreground">open</span>
@@ -296,204 +431,28 @@ function Index() {
         </div>
       </section>
 
-      {/* ACADEMICS */}
-      <section id="academics" className="relative px-6 py-24 sm:px-10">
-        <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="academics" title="Books & dreams" />
-          <div className="reveal-on-scroll mt-12 grid gap-6 md:grid-cols-3">
-            {/* 10th */}
-            <div
-              className="glass glass-hover relative overflow-hidden p-6"
-              style={{ borderColor: "oklch(0.70 0.18 150 / 0.3)" }}
-            >
-              <div
-                className="absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-30 blur-3xl"
-                style={{ background: "oklch(0.65 0.22 150)" }}
-              />
-              <div
-                className="relative flex h-12 w-12 items-center justify-center rounded-xl"
-                style={{ background: "oklch(0.65 0.22 150 / 0.18)", color: "oklch(0.78 0.18 150)" }}
-              >
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <p className="relative mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">10th Grade</p>
-              <h3 className="relative mt-1 font-display text-4xl font-extrabold">
-                <span style={{ color: "oklch(0.82 0.18 150)" }}>79.9%</span>
-              </h3>
-              <p className="relative mt-2 text-sm text-muted-foreground">GMSSSS Mahendergarh</p>
-            </div>
-
-            {/* 11/12 */}
-            <div className="glass glass-hover p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <p className="mt-5 text-[11px] uppercase tracking-widest text-muted-foreground">11th & 12th</p>
-              <h3 className="mt-1 font-display text-2xl font-bold">Science · PCB</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Physics, Chemistry, Biology at GMSSSS Mahendergarh.
-              </p>
-            </div>
-
-            {/* NEET */}
-            <div
-              className="glass glass-hover relative overflow-hidden p-6"
-              style={{ borderColor: "oklch(0.70 0.18 150 / 0.4)" }}
-            >
-              <div
-                className="absolute inset-0 opacity-25"
-                style={{
-                  background: "radial-gradient(circle at 70% 30%, oklch(0.65 0.22 150 / 0.45), transparent 60%)",
-                }}
-              />
-              <div
-                className="relative flex h-12 w-12 items-center justify-center rounded-xl"
-                style={{ background: "oklch(0.65 0.22 150 / 0.2)", color: "oklch(0.80 0.20 150)" }}
-              >
-                <Stethoscope className="h-5 w-5" />
-              </div>
-              <p className="relative mt-5 text-[11px] uppercase tracking-widest" style={{ color: "oklch(0.80 0.18 150)" }}>
-                Preparing for
-              </p>
-              <h3 className="relative mt-1 font-display text-2xl font-bold">NEET UG 2027</h3>
-              <p className="relative mt-2 text-sm text-muted-foreground">
-                Chasing the white coat, one chapter at a time.
-              </p>
-              <div className="relative mt-5">
-                <span
-                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold animate-neet-pulse"
-                  style={{
-                    background: "linear-gradient(135deg, oklch(0.55 0.22 150 / 0.25), oklch(0.65 0.22 160 / 0.15))",
-                    border: "1px solid oklch(0.70 0.20 150 / 0.5)",
-                    color: "oklch(0.88 0.16 150)",
-                  }}
-                >
-                  <Target className="h-4 w-4" />
-                  NEET UG 2027 Aspirant
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PLACES */}
-      <section id="places" className="relative px-6 py-24 sm:px-10">
-        <div className="mx-auto max-w-6xl">
-          <SectionTitle eyebrow="places" title="Where you'll find me" />
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <PlaceCard
-              Icon={Home}
-              eyebrow="home"
-              title="Majra Kalan"
-              subtitle="Mahendergarh, Haryana"
-              href="https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA"
-            />
-            <PlaceCard
-              Icon={School}
-              eyebrow="school"
-              title="GMSSSS Mahendergarh"
-              subtitle="Currently 12th standard"
-              href="https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* FRIENDS */}
-      <FriendsSection />
-
-
-      {/* JOURNEY */}
-      <section id="journey" className="relative px-6 py-24 sm:px-10">
-        <div className="mx-auto max-w-4xl">
-          <SectionTitle eyebrow="journey" title="School chapters" />
-          <div ref={timelineRef} className="relative mt-16 pl-8 sm:pl-12">
-            {/* vertical line */}
-            <div
-              className="absolute left-2 top-2 bottom-2 w-px origin-top sm:left-4"
-              style={{
-                background: "linear-gradient(to bottom, transparent, var(--primary) 15%, var(--primary-glow) 85%, transparent)",
-                animation: "draw-line 1.8s ease-out forwards",
-              }}
-            />
-            {timeline.map((t, i) => (
-              <div
-                key={i}
-                className="reveal-on-scroll relative mb-8 last:mb-0"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                {/* dot */}
-                <div
-                  className="absolute -left-[26px] top-4 flex h-4 w-4 items-center justify-center rounded-full sm:-left-[34px]"
-                  style={{
-                    background: t.current ? "var(--primary-glow)" : "var(--primary)",
-                    boxShadow: t.current
-                      ? "0 0 0 4px oklch(0.78 0.20 305 / 0.25), 0 0 20px var(--primary-glow)"
-                      : "0 0 0 4px oklch(0.68 0.22 295 / 0.15)",
-                  }}
-                />
-                <div className={`glass glass-hover p-5 ${t.current ? "border-primary/40" : ""}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-primary">{t.years}</p>
-                      <h3 className="mt-1 font-display text-lg font-bold sm:text-xl">{t.name}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{t.place}</p>
-                    </div>
-                    {t.current && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                        <Star className="h-3 w-3 fill-current" /> now
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* MEMORIES GALLERY */}
-      <MemoriesGallery />
+      {/* LEAVE A NOTE */}
+      <NotesSection />
 
       {/* SIGNATURE */}
       <section id="signature" className="relative overflow-hidden px-6 py-24 sm:px-10">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-          style={{ background: "oklch(0.55 0.22 295 / 0.18)" }}
-        />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{ backgroundImage: "radial-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          style={{ background: "oklch(0.55 0.22 295 / 0.18)" }} />
         <div className="reveal-on-scroll relative mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-[11px] uppercase tracking-[0.35em] text-primary">signed</p>
           <div className="relative mt-6 inline-block">
-            <h2
-              className="font-signature text-[clamp(4.5rem,16vw,7rem)] font-bold leading-none text-foreground"
+            <h2 className="font-signature text-[clamp(4.5rem,16vw,7rem)] font-bold leading-none text-foreground"
               style={{
                 transform: "rotate(-3deg)",
                 textShadow: "0 0 30px oklch(0.78 0.20 305 / 0.45), 0 0 60px oklch(0.68 0.22 295 / 0.25)",
-              }}
-            >
+              }}>
               Piyush
             </h2>
-            <svg
-              viewBox="0 0 320 40"
-              className="mx-auto -mt-2 block w-[80%] sm:w-[70%]"
-              fill="none"
-              style={{ transform: "rotate(-3deg)" }}
-            >
-              <path
-                d="M5 25 C 60 5, 120 35, 180 18 S 290 30, 315 12"
-                stroke="url(#sig-grad)"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
+            <svg viewBox="0 0 320 40" className="mx-auto -mt-2 block w-[80%] sm:w-[70%]" fill="none" style={{ transform: "rotate(-3deg)" }}>
+              <path d="M5 25 C 60 5, 120 35, 180 18 S 290 30, 315 12"
+                stroke="url(#sig-grad)" strokeWidth="3" strokeLinecap="round" />
               <defs>
                 <linearGradient id="sig-grad" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor="oklch(0.68 0.22 295)" />
@@ -517,14 +476,8 @@ function Index() {
           </div>
           <div className="flex gap-3">
             {socials.slice(0, 3).map((s, i) => (
-              <a
-                key={i}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-all hover:border-primary/40 hover:text-primary"
-              >
+              <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-all hover:border-primary/40 hover:text-primary">
                 <s.Icon className="h-4 w-4" />
               </a>
             ))}
@@ -548,9 +501,7 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
 function InfoTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="glass glass-hover flex items-center gap-3 p-4">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-        {icon}
-      </div>
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">{icon}</div>
       <div>
         <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
         <p className="text-sm font-semibold">{value}</p>
@@ -571,9 +522,7 @@ function HobbyCard({ Icon, title, text }: { Icon: React.ComponentType<{ classNam
   );
 }
 
-function PlaceCard({
-  Icon, eyebrow, title, subtitle, href,
-}: {
+function PlaceCard({ Icon, eyebrow, title, subtitle, href }: {
   Icon: React.ComponentType<{ className?: string }>;
   eyebrow: string; title: string; subtitle: string; href: string;
 }) {
@@ -587,76 +536,56 @@ function PlaceCard({
       </div>
       <h3 className="mt-5 font-display text-2xl font-bold">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-6 inline-flex items-center justify-center gap-2 self-start rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-medium text-primary transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-[var(--shadow-glow)]"
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer"
+        className="mt-6 inline-flex items-center justify-center gap-2 self-start rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-medium text-primary transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-[var(--shadow-glow)]">
         <MapPin className="h-4 w-4" /> Open in Google Maps
       </a>
     </div>
   );
 }
 
-const FRIEND_PHOTO_PREFIX = "friend_photo_";
-
-function compressTo(file: File, maxW = 480): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("read"));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("decode"));
-      img.onload = () => {
-        const scale = Math.min(1, maxW / img.width);
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const c = document.createElement("canvas");
-        c.width = w; c.height = h;
-        const ctx = c.getContext("2d");
-        if (!ctx) return reject(new Error("ctx"));
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(c.toDataURL("image/jpeg", 0.85));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
+function slug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
 function FriendsSection() {
+  const { t } = useT();
   const { unlocked, lockUI } = useLock("piyush.friends.unlocked");
-  const [photos, setPhotos] = useState<Record<string, string>>({});
+  const [photos, setPhotos] = useState<Record<string, { path: string; url: string }>>({});
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const next: Record<string, string> = {};
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.storage.from(BUCKETS.friends).list("", { limit: 200 });
+    const next: Record<string, { path: string; url: string }> = {};
     for (const name of friends) {
-      try {
-        const v = localStorage.getItem(FRIEND_PHOTO_PREFIX + name);
-        if (v) next[name] = v;
-      } catch { /* ignore */ }
+      const prefix = slug(name) + ".";
+      const f = (data || []).find((x) => x.name.startsWith(prefix));
+      if (f) next[name] = { path: f.name, url: publicUrl(BUCKETS.friends, f.name) + `?v=${f.updated_at || f.created_at || ""}` };
     }
-    setPhotos(next);
+    setPhotos(next); setLoading(false);
   }, []);
 
-  const setPhoto = async (name: string, file: File) => {
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const upload = async (name: string, file: File) => {
     try {
-      const data = await compressTo(file);
-      localStorage.setItem(FRIEND_PHOTO_PREFIX + name, data);
-      setPhotos((p) => ({ ...p, [name]: data }));
-    } catch (e) {
-      console.warn("photo failed", e);
-    }
+      const blob = await compressImage(file, 480, 0.85);
+      const path = `${slug(name)}.jpg`;
+      await supabase.storage.from(BUCKETS.friends).remove([path]);
+      const { error } = await supabase.storage.from(BUCKETS.friends).upload(path, blob, {
+        contentType: "image/jpeg", upsert: true,
+      });
+      if (error) console.warn(error);
+      await refresh();
+    } catch (e) { console.warn(e); }
   };
 
-  const removePhoto = (name: string) => {
-    try { localStorage.removeItem(FRIEND_PHOTO_PREFIX + name); } catch { /* ignore */ }
-    setPhotos((p) => {
-      const n = { ...p };
-      delete n[name];
-      return n;
-    });
+  const remove = async (name: string) => {
+    const p = photos[name];
+    if (!p) return;
+    await supabase.storage.from(BUCKETS.friends).remove([p.path]);
+    setPhotos((cur) => { const n = { ...cur }; delete n[name]; return n; });
   };
 
   return (
@@ -665,92 +594,60 @@ function FriendsSection() {
         <div className="reveal-on-scroll flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-primary">— circle</p>
-            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">My Circle 🤝</h2>
+            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">{t("my_circle")} 🤝</h2>
           </div>
           <div className="shrink-0 pt-2">{lockUI}</div>
         </div>
-        <p className="reveal-on-scroll mt-4 max-w-xl text-sm text-muted-foreground">
-          The people who make ordinary days unforgettable.
-        </p>
-        <div className="reveal-on-scroll mt-12 flex flex-wrap gap-4">
-          {friends.map((name, i) => (
-            <FriendCard
-              key={name}
-              name={name}
-              gradient={friendGradients[i % friendGradients.length]}
-              photo={photos[name]}
-              admin={unlocked}
-              onUpload={(f) => setPhoto(name, f)}
-              onRemove={() => removePhoto(name)}
-            />
-          ))}
-        </div>
+        <p className="reveal-on-scroll mt-4 max-w-xl text-sm text-muted-foreground">{t("circle_subtitle")}</p>
+
+        {loading ? (
+          <div className="mt-12 flex items-center justify-center py-10 text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loading")}
+          </div>
+        ) : (
+          <div className="reveal-on-scroll mt-12 flex flex-wrap gap-4">
+            {friends.map((name, i) => (
+              <FriendCard key={name} name={name} gradient={friendGradients[i % friendGradients.length]}
+                photo={photos[name]?.url} admin={unlocked}
+                onUpload={(f) => upload(name, f)} onRemove={() => remove(name)} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function FriendCard({
-  name, gradient, photo, admin, onUpload, onRemove,
-}: {
-  name: string;
-  gradient: string;
-  photo?: string;
-  admin: boolean;
-  onUpload: (f: File) => void;
-  onRemove: () => void;
+function FriendCard({ name, gradient, photo, admin, onUpload, onRemove }: {
+  name: string; gradient: string; photo?: string; admin: boolean;
+  onUpload: (f: File) => void; onRemove: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div
-      className="group relative flex h-32 w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 p-3 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)] sm:h-36 sm:w-36"
-      style={{ background: gradient }}
-    >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: "radial-gradient(circle at 50% 0%, oklch(1 0 0 / 0.18), transparent 70%)" }}
-      />
+    <div className="group relative flex h-32 w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 p-3 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)] sm:h-36 sm:w-36"
+      style={{ background: gradient }}>
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: "radial-gradient(circle at 50% 0%, oklch(1 0 0 / 0.18), transparent 70%)" }} />
       {photo ? (
-        <img
-          src={photo}
-          alt={name}
-          className="relative h-16 w-16 rounded-full object-cover ring-2 ring-white/40 sm:h-20 sm:w-20"
-        />
+        <img src={photo} alt={name} className="relative h-16 w-16 rounded-full object-cover ring-2 ring-white/40 sm:h-20 sm:w-20" />
       ) : (
-        <span className="relative font-display text-5xl font-extrabold text-white drop-shadow-lg sm:text-6xl">
-          {name.charAt(0)}
-        </span>
+        <span className="relative font-display text-5xl font-extrabold text-white drop-shadow-lg sm:text-6xl">{name.charAt(0)}</span>
       )}
       <span className="relative mt-1 text-sm font-semibold text-white/90">{name}</span>
 
       {admin && (
         <>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onUpload(f);
-              e.target.value = "";
-            }}
-          />
-          <div className="pointer-events-none absolute right-1.5 top-1.5 flex flex-col gap-1.5 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-            <button
-              onClick={() => inputRef.current?.click()}
-              aria-label={`Upload photo for ${name}`}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-primary"
-            >
-              <Camera className="h-3.5 w-3.5" />
+          <input ref={inputRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ""; }} />
+          <div className="absolute bottom-1.5 right-1.5 flex flex-col gap-1.5">
+            <button onClick={() => inputRef.current?.click()} aria-label={`Upload photo for ${name}`}
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95">
+              <Camera className="h-4 w-4" />
             </button>
             {photo && (
-              <button
-                onClick={onRemove}
-                aria-label={`Remove photo for ${name}`}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
+              <button onClick={onRemove} aria-label={`Remove photo for ${name}`}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive text-white shadow-lg transition-transform active:scale-95">
+                <Trash2 className="h-4 w-4" />
               </button>
             )}
           </div>
