@@ -552,7 +552,7 @@ function FriendsSection() {
   const { t } = useT();
   const { unlocked, lockUI } = useLock("piyush.friends.unlocked");
   const [photos, setPhotos] = useState<Record<string, { path: string; url: string }>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
