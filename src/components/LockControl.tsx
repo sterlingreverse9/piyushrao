@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock, Unlock, X } from "lucide-react";
 
-const PASSWORD = "piyush83";
+const PASSWORD = "qwer123@$()";
 
 export function useLock(storageKey: string) {
   const [unlocked, setUnlocked] = useState(false);
