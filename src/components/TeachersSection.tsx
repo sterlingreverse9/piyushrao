@@ -112,8 +112,8 @@ function TeacherCard({
       }}
     >
       <div
-        className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full ring-2"
-        style={{ ringColor: "oklch(0.85 0.16 90 / 0.6)" as any, background: "linear-gradient(135deg, oklch(0.40 0.18 280), oklch(0.30 0.15 260))" }}
+        className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full"
+        style={{ boxShadow: "0 0 0 2px oklch(0.85 0.16 90 / 0.6)", background: "linear-gradient(135deg, oklch(0.40 0.18 280), oklch(0.30 0.15 260))" }}
       >
         {photo ? (
           <img src={photo} alt={teacher.name} className="h-full w-full object-cover" />
