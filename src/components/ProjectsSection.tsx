@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Plus, Trash2, X, Rocket } from "lucide-react";
+import { ExternalLink, Plus, Trash2, X, Rocket, Loader2 } from "lucide-react";
 import { useLock } from "@/components/LockControl";
 import { useT } from "@/lib/i18n";
+import { supabase } from "@/lib/supabaseClient";
 
 type Project = {
   id: string;
@@ -10,13 +11,6 @@ type Project = {
   url: string;
   tags: string[];
 };
-
-const STORAGE_KEY = "piyush.projects.v1";
-
-const DEFAULTS: Project[] = [
-  { id: "sk-burger", name: "SK Burger", description: "Restaurant website for SK Burger, Mahendergarh", url: "", tags: ["HTML", "Lovable"] },
-  { id: "sparkling", name: "Sparkling Home Solutions", description: "Cleaning company sample website", url: "", tags: ["HTML", "Lovable"] },
-];
 
 const gradients = [
   "linear-gradient(135deg, oklch(0.45 0.20 30), oklch(0.40 0.18 60))",
@@ -33,28 +27,28 @@ export function ProjectsSection() {
   const { t } = useT();
   const { unlocked, lockUI } = useLock("piyush.projects.unlocked");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setProjects(JSON.parse(raw));
-      else setProjects(DEFAULTS);
-    } catch { setProjects(DEFAULTS); }
-    setLoaded(true);
-  }, []);
+  const fetch = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
+    setProjects((data || []).map((p: any) => ({ ...p, tags: p.tags || [] })));
+    setLoading(false);
+  };
 
-  useEffect(() => {
-    if (!loaded) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); } catch { /* ignore */ }
-  }, [projects, loaded]);
+  useEffect(() => { fetch(); }, []);
 
-  const add = (p: Omit<Project, "id">) => {
-    setProjects((cur) => [{ ...p, id: `p-${Date.now()}` }, ...cur]);
+  const add = async (p: Omit<Project, "id">) => {
+    await supabase.from("projects").insert([{ name: p.name, description: p.description, url: p.url, tags: p.tags }]);
+    await fetch();
     setOpen(false);
   };
-  const remove = (id: string) => setProjects((cur) => cur.filter((p) => p.id !== id));
+
+  const remove = async (id: string) => {
+    await supabase.from("projects").delete().eq("id", id);
+    setProjects((cur) => cur.filter((p) => p.id !== id));
+  };
 
   return (
     <section id="projects" className="relative px-6 py-24 sm:px-10">
@@ -76,11 +70,17 @@ export function ProjectsSection() {
           </div>
         </div>
 
-        <div className="reveal-on-scroll mt-12 grid gap-6 sm:grid-cols-2">
-          {projects.map((p, i) => (
-            <ProjectCard key={p.id} p={p} gradient={gradients[i % gradients.length]} admin={unlocked} onDelete={() => remove(p.id)} t={t} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="mt-12 flex items-center justify-center py-10 text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading...
+          </div>
+        ) : (
+          <div className="reveal-on-scroll mt-12 grid gap-6 sm:grid-cols-2">
+            {projects.map((p, i) => (
+              <ProjectCard key={p.id} p={p} gradient={gradients[i % gradients.length]} admin={unlocked} onDelete={() => remove(p.id)} t={t} />
+            ))}
+          </div>
+        )}
       </div>
 
       {open && <AddProjectModal onClose={() => setOpen(false)} onAdd={add} />}
