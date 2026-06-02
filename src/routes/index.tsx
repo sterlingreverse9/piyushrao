@@ -194,6 +194,35 @@ const handleEnter = () => {
   return (
     <div id="top" className="relative z-10 min-h-screen font-body">
       <StickyNav />
+{!entered && (
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center"
+    style={{ background: "oklch(0.08 0.02 285)" }}
+  >
+    <div className="relative text-center px-6">
+      <div className="pointer-events-none absolute -top-32 -left-32 h-64 w-64 rounded-full blur-3xl"
+        style={{ background: "oklch(0.55 0.25 295 / 0.4)" }} />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 h-64 w-64 rounded-full blur-3xl"
+        style={{ background: "oklch(0.50 0.22 320 / 0.35)" }} />
+      <p className="relative text-xs uppercase tracking-[0.4em] text-primary mb-4">welcome to</p>
+      <h1 className="relative font-display text-[clamp(4rem,20vw,10rem)] font-extrabold leading-none tracking-tighter">
+        <span className="text-gradient">Piyush's</span>
+        <br />
+        <span className="text-white">VibeSpace</span>
+      </h1>
+      <p className="relative mt-6 text-sm text-muted-foreground">
+        A personal space — gaming, coding & everything in between
+      </p>
+      <button
+        onClick={handleEnter}
+        className="relative mt-10 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-[var(--shadow-glow)]"
+        style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}
+      >
+        ✨ Enter VibeSpace
+      </button>
+    </div>
+  </div>
+)}
 <MusicPlayer adminPassword="qwer@$()" />
 {showWelcome && (
   <div
