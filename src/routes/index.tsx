@@ -175,6 +175,16 @@ const [showWelcome, setShowWelcome] = useState(() => {
   if (seen && Date.now() - Number(seen) < 50 * 60 * 60 * 1000) return false;
   return true;
 });
+const [entered, setEntered] = useState(false);
+
+const handleEnter = () => {
+  setEntered(true);
+  setTimeout(() => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, 100);
+};
   useReveal();
   const { t } = useT();
   const dob = useMemo(() => new Date(2009, 6, 26), []);
