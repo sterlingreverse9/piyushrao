@@ -732,14 +732,7 @@ function FriendCard({ name, gradient, photo, admin, onUpload, onRemove }: {
     </div>
   );
 }
-
 function MusicPlayer({ adminPassword }: { adminPassword: string }) {
-  const SONGS = [
-    { name: "Lofi Chill", url: "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" },
-    { name: "Relaxing Beats", url: "https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3" },
-    { name: "Ambient Vibes", url: "https://cdn.pixabay.com/audio/2023/01/09/audio_8b4f8b0a1c.mp3" },
-  ];
-
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -748,15 +741,30 @@ function MusicPlayer({ adminPassword }: { adminPassword: string }) {
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
-  const [songs, setSongs] = useState(SONGS);
-  const [newSongName, setNewSongName] = useState("");
-  const [newSongUrl, setNewSongUrl] = useState("");
+  const [songs, setSongs] = useState<{ name: string; url: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const uploadRef = useRef<HTMLInputElement>(null);
+
+  const fetchSongs = async () => {
+    setLoading(true);
+    const { data } = await supabase.storage.from("music").list("", { limit: 100 });
+    if (data && data.length > 0) {
+      const list = data.map((f) => ({
+        name: f.name.replace(/\.mp3$/i, ""),
+        url: supabase.storage.from("music").getPublicUrl(f.name).data.publicUrl,
+      }));
+      setSongs(list);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchSongs(); }, []);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && songs[currentIndex]) {
+      audioRef.current.src = songs[currentIndex].url;
       audioRef.current.volume = volume;
-      audioRef.current.src = songs[currentIndex]?.url || "";
-      if (playing) audioRef.current.play().catch(() => setPlaying(false));
+      if (playing) audioRef.current.play().catch(() => {});
     }
   }, [currentIndex, songs]);
 
@@ -774,20 +782,29 @@ function MusicPlayer({ adminPassword }: { adminPassword: string }) {
   const next = () => setCurrentIndex((i) => (i + 1) % songs.length);
 
   const unlockAdmin = () => {
-    if (pwInput === adminPassword) { setAdminUnlocked(true); setAdminOpen(false); setPwError(false); }
+    if (pwInput === adminPassword) { setAdminUnlocked(true); setAdminOpen(false); setPwError(false); setPwInput(""); }
     else { setPwError(true); }
   };
 
-  const addSong = () => {
-    if (!newSongName.trim() || !newSongUrl.trim()) return;
-    setSongs((s) => [...s, { name: newSongName.trim(), url: newSongUrl.trim() }]);
-    setNewSongName(""); setNewSongUrl("");
+  const uploadSong = async (file: File) => {
+    const path = file.name;
+    await supabase.storage.from("music").upload(path, file, { upsert: true });
+    await fetchSongs();
+  };
+
+  const deleteSong = async (name: string) => {
+    await supabase.storage.from("music").remove([`${name}.mp3`]);
+    await fetchSongs();
   };
 
   return (
     <>
-      <audio ref={audioRef} loop onEnded={next} />
+      <audio ref={audioRef} onEnded={next} />
+      <input ref={uploadRef} type="file" accept="audio/mp3,audio/*" className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadSong(f); e.target.value = ""; }} />
+
       <div className="fixed bottom-5 left-5 z-50 flex flex-col gap-2">
+        {/* Main Player */}
         <div
           className="flex items-center gap-3 rounded-2xl px-4 py-3"
           style={{
@@ -797,31 +814,34 @@ function MusicPlayer({ adminPassword }: { adminPassword: string }) {
             boxShadow: "0 8px 32px oklch(0.55 0.25 295 / 0.2)",
           }}
         >
-          <div className="flex flex-col" style={{ minWidth: "80px", maxWidth: "120px" }}>
-            <span className="text-[10px] uppercase tracking-widest" style={{ color: "oklch(0.65 0.22 295)" }}>Now Playing</span>
-            <span className="truncate text-xs font-semibold text-foreground">{songs[currentIndex]?.name}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {adminUnlocked && (
-              <button onClick={prev} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">⏮</button>
-            )}
-            <button onClick={togglePlay}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}>
-              {playing ? "⏸" : "▶"}
-            </button>
-            {adminUnlocked && (
-              <button onClick={next} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors">⏭</button>
-            )}
-          </div>
+          {/* Play/Pause */}
+          <button onClick={togglePlay}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground transition-all hover:scale-105"
+            style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}>
+            {playing ? "⏸" : "▶"}
+          </button>
+
+          {/* Admin: Prev/Next */}
+          {adminUnlocked && (
+            <>
+              <button onClick={prev} className="text-muted-foreground hover:text-foreground text-sm">⏮</button>
+              <button onClick={next} className="text-muted-foreground hover:text-foreground text-sm">⏭</button>
+            </>
+          )}
+
+          {/* Volume */}
           <input type="range" min="0" max="1" step="0.01" value={volume}
             onChange={(e) => setVolume(Number(e.target.value))}
             className="w-16 accent-primary cursor-pointer" />
+
+          {/* Admin Lock */}
           <button onClick={() => setAdminOpen(!adminOpen)}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             {adminUnlocked ? "🔓" : "🔒"}
           </button>
         </div>
+
+        {/* Admin Panel */}
         {adminOpen && (
           <div className="rounded-2xl p-4"
             style={{
@@ -832,7 +852,8 @@ function MusicPlayer({ adminPassword }: { adminPassword: string }) {
             {!adminUnlocked ? (
               <div className="flex flex-col gap-2">
                 <p className="text-xs text-muted-foreground">Admin password</p>
-                <input type="password" value={pwInput} onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+                <input type="password" value={pwInput}
+                  onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
                   placeholder="••••••••"
                   className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60"
                   style={{ borderColor: pwError ? "red" : undefined }} />
@@ -844,21 +865,26 @@ function MusicPlayer({ adminPassword }: { adminPassword: string }) {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <p className="text-xs font-semibold text-foreground">Manage Songs</p>
-                {songs.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs text-muted-foreground">{s.name}</span>
-                    <button onClick={() => setSongs((ss) => ss.filter((_, j) => j !== i))}
-                      className="text-xs text-red-400 hover:text-red-300">✕</button>
-                  </div>
-                ))}
-                <div className="flex flex-col gap-1.5 border-t border-border pt-2">
-                  <input value={newSongName} onChange={(e) => setNewSongName(e.target.value)} placeholder="Song name"
-                    className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60" />
-                  <input value={newSongUrl} onChange={(e) => setNewSongUrl(e.target.value)} placeholder="MP3 URL"
-                    className="rounded-lg border border-border bg-black/30 px-3 py-1.5 text-xs outline-none focus:border-primary/60" />
-                  <button onClick={addSong} className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">+ Add Song</button>
-                </div>
+                <p className="text-xs font-semibold text-foreground">🎵 Manage Songs</p>
+                {loading ? (
+                  <p className="text-xs text-muted-foreground">Loading...</p>
+                ) : songs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No songs yet</p>
+                ) : (
+                  songs.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2">
+                      <span className={`truncate text-xs ${i === currentIndex ? "text-primary font-semibold" : "text-muted-foreground"}`}>{s.name}</span>
+                      <div className="flex gap-2">
+                        <button onClick={() => setCurrentIndex(i)} className="text-xs text-primary">▶</button>
+                        <button onClick={() => deleteSong(s.name)} className="text-xs text-red-400">✕</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <button onClick={() => uploadRef.current?.click()}
+                  className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">
+                  + Upload MP3
+                </button>
                 <button onClick={() => { setAdminUnlocked(false); setAdminOpen(false); }}
                   className="text-xs text-muted-foreground hover:text-foreground">Lock 🔒</button>
               </div>
