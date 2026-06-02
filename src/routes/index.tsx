@@ -180,10 +180,9 @@ const [entered, setEntered] = useState(false);
 const handleEnter = () => {
   setEntered(true);
   setTimeout(() => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(() => {});
-    }
-  }, 100);
+    const audio = document.querySelector("audio");
+    if (audio) audio.play().catch(() => {});
+  }, 500);
 };
   useReveal();
   const { t } = useT();
