@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MemoriesGallery } from "@/components/MemoriesGallery";
+import { PiyushAI } from "@/components/PiyushAI";
 import { TeachersSection } from "@/components/TeachersSection";
 import { ProjectsSection } from "@/components/ProjectsSection";
 import { NotesSection } from "@/components/NotesSection";
@@ -599,6 +600,7 @@ const handleEnter = () => {
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} · Haryana, India</p>
         </div>
       </footer>
+      <PiyushAI />
     </div>
   );
 }
