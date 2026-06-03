@@ -5,6 +5,7 @@ import { PiyushAI } from "@/components/PiyushAI";
 import { TeachersSection } from "@/components/TeachersSection";
 import { ProjectsSection } from "@/components/ProjectsSection";
 import { NotesSection } from "@/components/NotesSection";
+import { VisitorCounter } from "@/components/VisitorCounter";
 import { useLock } from "@/components/LockControl";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { supabase, BUCKETS, publicUrl, compressImage } from "@/lib/supabaseClient";
@@ -326,6 +327,7 @@ const handleEnter = () => {
             <p className="mt-3 text-sm text-muted-foreground">
               born <span className="text-foreground/80">26 July 2009</span> — currently {age} years young
             </p>
+            <div className="mt-5"><VisitorCounter /></div>
 
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#connect" className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:shadow-[var(--shadow-glow)]">
