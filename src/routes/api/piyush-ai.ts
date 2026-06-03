@@ -67,19 +67,24 @@ export const Route = createFileRoute("/api/piyush-ai")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { messages } = (await request.json()) as {
+          const { messages, knowledge } = (await request.json()) as {
             messages: { role: "user" | "assistant"; content: string }[];
+            knowledge?: string[];
           };
 
           const key = process.env.LOVABLE_API_KEY;
           if (!key) return new Response(JSON.stringify({ error: "Missing API key" }), { status: 500 });
+
+          const extra = Array.isArray(knowledge) && knowledge.length
+            ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
+            : "";
 
           const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
-              messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages.slice(-20)],
+              messages: [{ role: "system", content: SYSTEM_PROMPT + extra }, ...messages.slice(-20)],
             }),
           });
 
