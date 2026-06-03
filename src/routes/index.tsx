@@ -5,6 +5,7 @@ import { PiyushAI } from "@/components/PiyushAI";
 import { TeachersSection } from "@/components/TeachersSection";
 import { ProjectsSection } from "@/components/ProjectsSection";
 import { NotesSection } from "@/components/NotesSection";
+import { VisitorCounter } from "@/components/VisitorCounter";
 import { useLock } from "@/components/LockControl";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { supabase, BUCKETS, publicUrl, compressImage } from "@/lib/supabaseClient";
@@ -40,10 +41,17 @@ function calcAge(dob: Date) {
   return age;
 }
 
+const DiscordIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+    <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.074.074 0 0 0-.079.037c-.34.6-.719 1.384-.984 2a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-1-2 .077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 5.17 4.369a.07.07 0 0 0-.032.027C2.092 8.84 1.27 13.18 1.673 17.464a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.029.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.105 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.106c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-4.95-.838-9.255-3.549-13.07a.061.061 0 0 0-.031-.028zM8.02 14.852c-1.183 0-2.157-1.086-2.157-2.42 0-1.333.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.334-.955 2.42-2.157 2.42zm7.974 0c-1.183 0-2.157-1.086-2.157-2.42 0-1.333.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.334-.946 2.42-2.157 2.42z"/>
+  </svg>
+);
+
 const socials = [
   { label: "WhatsApp", detail: "+91 83959 51790", href: "https://wa.me/918395951790", Icon: Phone, color: "oklch(0.72 0.20 150)" },
   { label: "Telegram", detail: "@mrpuppyx", href: "https://telegram.me/mrpuppyx", Icon: Send, color: "oklch(0.72 0.18 230)" },
   { label: "Instagram", detail: "@temporary_piyush", href: "https://www.instagram.com/temporary_piyush?igsh=c2R3dHJrbno4Zzl0", Icon: Instagram, color: "oklch(0.68 0.24 15)" },
+  { label: "Discord", detail: "piyushyadav83", href: "https://discord.com/users/piyushyadav83", Icon: DiscordIcon, color: "oklch(0.62 0.20 270)" },
   { label: "Gmail", detail: "sterlingreverse9@gmail.com", href: "mailto:sterlingreverse9@gmail.com", Icon: Mail, color: "oklch(0.70 0.20 25)" },
   { label: "Gmail", detail: "piyushmajra1975@gmail.com", href: "mailto:piyushmajra1975@gmail.com", Icon: Mail, color: "oklch(0.70 0.20 25)" },
 ];
@@ -319,6 +327,7 @@ const handleEnter = () => {
             <p className="mt-3 text-sm text-muted-foreground">
               born <span className="text-foreground/80">26 July 2009</span> — currently {age} years young
             </p>
+            <div className="mt-5"><VisitorCounter /></div>
 
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#connect" className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:shadow-[var(--shadow-glow)]">
@@ -462,7 +471,7 @@ const handleEnter = () => {
             <PlaceCard Icon={Home} eyebrow="home" title="Majra Kalan" subtitle="Mahendergarh, Haryana"
               href="https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA" />
             <PlaceCard Icon={School} eyebrow="school" title="GMSSSS Mahendergarh" subtitle="Currently 12th standard"
-              href="https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9" />
+              href="https://maps.app.goo.gl/WUL5FruudtcxSG1A7" />
           </div>
         </div>
       </section>
