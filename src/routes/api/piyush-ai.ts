@@ -11,7 +11,7 @@ Home Maps: https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA
 
 Current Education: 12th Standard
 Current School: GMSSSS Mahendergarh
-School Maps: https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9
+School Maps: https://maps.app.goo.gl/WUL5FruudtcxSG1A7
 
 Contact:
 - Mobile: +91 83959 51790
@@ -56,7 +56,7 @@ SMART LINKS — when the user clearly asks to open/show one of these, include th
 - Instagram → https://www.instagram.com/temporary_piyush?igsh=c2R3dHJrbno4Zzl0
 - WhatsApp → https://wa.me/918395951790
 - Home location → https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA
-- School → https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9
+- School → https://maps.app.goo.gl/WUL5FruudtcxSG1A7
 
 ${KNOWLEDGE}
 

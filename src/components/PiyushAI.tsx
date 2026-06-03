@@ -27,7 +27,7 @@ const LINK_MAP: { match: RegExp; url: string }[] = [
   { match: /open\s+instagram|instagram\s+(link|open)/i, url: "https://www.instagram.com/temporary_piyush?igsh=c2R3dHJrbno4Zzl0" },
   { match: /open\s+whatsapp|whatsapp\s+(link|open)/i, url: "https://wa.me/918395951790" },
   { match: /(show|open)\s+(home|location|house)/i, url: "https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA" },
-  { match: /(show|open|where).*school/i, url: "https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9" },
+  { match: /(show|open|where).*school/i, url: "https://maps.app.goo.gl/WUL5FruudtcxSG1A7" },
 ];
 
 function extractUrls(text: string): string[] {

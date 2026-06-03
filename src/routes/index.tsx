@@ -462,7 +462,7 @@ const handleEnter = () => {
             <PlaceCard Icon={Home} eyebrow="home" title="Majra Kalan" subtitle="Mahendergarh, Haryana"
               href="https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA" />
             <PlaceCard Icon={School} eyebrow="school" title="GMSSSS Mahendergarh" subtitle="Currently 12th standard"
-              href="https://maps.app.goo.gl/F8CRuQ1UqRxou1QM9" />
+              href="https://maps.app.goo.gl/WUL5FruudtcxSG1A7" />
           </div>
         </div>
       </section>
