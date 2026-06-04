@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MessageCircle, X, Send, Sparkles, Mic, MicOff, Volume2, VolumeX, ExternalLink, Lock, Unlock, Trash2, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-const ELEVEN_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
+const ELEVEN_VOICE_ID = "1qEiC6qsybMkmnNdVMbK";
 const ELEVEN_API_KEY = "sk_4b462662a574f6dd909d4655bc8c74424957bc221970f71a";
 
 type Msg = { role: "user" | "assistant"; content: string; ts: number };
