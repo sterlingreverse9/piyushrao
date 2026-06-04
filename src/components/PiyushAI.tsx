@@ -143,6 +143,7 @@ export function PiyushAI() {
     lastSpokenRef.current = lastIdx;
     const clean = last.content.replace(/https?:\/\/\S+/g, "").trim();
     if (!clean) return;
+    const speakWithElevenLabs = async () => {
     setSpeakingIdx(lastIdx);
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
