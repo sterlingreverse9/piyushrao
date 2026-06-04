@@ -158,7 +158,12 @@ export function PiyushAI() {
           voice_settings: { stability: 0.5, similarity_boost: 0.75 }
         }),
       });
-      if (!res.ok) throw new Error("ElevenLabs failed");
+      if (!res.ok) {
+  const errorText = await res.text();
+  throw new Error(
+    `ElevenLabs failed (${res.status}): ${errorText}`
+  );
+}
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
