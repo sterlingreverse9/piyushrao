@@ -136,6 +136,84 @@ function Particles() {
   );
 }
 
+function TypingRoles() {
+  const roles = useMemo(() => [
+    "Gamer 🎮",
+    "Vibe Coder 💻",
+    "NEET Aspirant 🩺",
+    "Night Owl 🌙",
+    "From Haryana, India 🇮🇳",
+  ], []);
+  const [i, setI] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const full = roles[i];
+    if (!deleting && text === full) {
+      const t = setTimeout(() => setDeleting(true), 1800);
+      return () => clearTimeout(t);
+    }
+    if (deleting && text === "") {
+      setDeleting(false);
+      setI((p) => (p + 1) % roles.length);
+      return;
+    }
+    const t = setTimeout(() => {
+      setText((prev) => deleting ? full.slice(0, prev.length - 1) : full.slice(0, prev.length + 1));
+    }, deleting ? 35 : 70);
+    return () => clearTimeout(t);
+  }, [text, deleting, i, roles]);
+
+  return (
+    <span className="text-foreground">{text}<span className="caret" /></span>
+  );
+}
+
+function CustomCursor() {
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    let rx = 0, ry = 0, dx = 0, dy = 0, raf = 0;
+    const move = (e: MouseEvent) => {
+      dx = e.clientX; dy = e.clientY;
+      if (dotRef.current) { dotRef.current.style.left = dx + "px"; dotRef.current.style.top = dy + "px"; }
+    };
+    const loop = () => {
+      rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
+      if (ringRef.current) { ringRef.current.style.left = rx + "px"; ringRef.current.style.top = ry + "px"; }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    const over = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      const hov = !!t.closest('a, button, [role="button"], input, textarea, select, label');
+      dotRef.current?.classList.toggle("hovering", hov);
+      ringRef.current?.classList.toggle("hovering", hov);
+    };
+    const down = () => dotRef.current?.classList.add("clicking");
+    const up = () => dotRef.current?.classList.remove("clicking");
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseover", over);
+    window.addEventListener("mousedown", down);
+    window.addEventListener("mouseup", up);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseover", over);
+      window.removeEventListener("mousedown", down);
+      window.removeEventListener("mouseup", up);
+    };
+  }, []);
+  return (
+    <>
+      <div ref={ringRef} className="lov-cursor-ring" />
+      <div ref={dotRef} className="lov-cursor" />
+    </>
+  );
+}
+
 function StickyNav() {
   const { t } = useT();
   const [scrolled, setScrolled] = useState(false);
