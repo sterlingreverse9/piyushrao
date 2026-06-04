@@ -288,20 +288,33 @@ const handleEnter = () => {
 {!entered && (
   <div
     className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
-    style={{ background: "oklch(0.05 0.02 285)" }}
+    style={{ background: "oklch(0.05 0.02 285)", animation: "ai-fade .5s ease" }}
   >
     <Particles />
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      {["🎮","💻","🩺","🌙","✨"].map((e, i) => (
+        <span key={i} className="absolute text-2xl md:text-3xl animate-float"
+          style={{
+            left: `${10 + i * 18}%`,
+            top: `${15 + (i % 3) * 22}%`,
+            animationDelay: `${i * 0.6}s`,
+            opacity: 0.7,
+            filter: "drop-shadow(0 0 10px oklch(0.75 0.28 305 / 0.6))",
+          }}>{e}</span>
+      ))}
+    </div>
     <div className="pointer-events-none absolute -top-32 -left-32 h-72 w-72 rounded-full blur-3xl animate-blob"
       style={{ background: "oklch(0.55 0.25 295 / 0.45)" }} />
     <div className="pointer-events-none absolute -bottom-32 -right-32 h-72 w-72 rounded-full blur-3xl animate-blob"
       style={{ background: "oklch(0.50 0.22 320 / 0.40)", animationDelay: "-6s" }} />
+    <div className="mesh-floor" />
     <div className="relative w-full max-w-3xl text-center px-6">
       <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.35em] mb-5"
         style={{ borderColor: "oklch(0.65 0.25 295 / 0.3)", background: "oklch(0.65 0.25 295 / 0.08)", color: "oklch(0.78 0.20 305)" }}>
         ✦ Personal Space ✦
       </div>
       <h1 className="font-display font-extrabold leading-[0.95] tracking-tighter mx-auto"
-        style={{ fontSize: "clamp(2.2rem, 10vw, 7rem)" }}>
+        style={{ fontSize: "clamp(2.2rem, 9vw, 6.5rem)" }}>
         <span className="text-gradient">Piyush's</span>
         <br />
         <span className="text-white">VibeSpace</span>
@@ -313,8 +326,8 @@ const handleEnter = () => {
         <span aria-hidden className="absolute inset-0 -m-2 rounded-full pulse-ring" />
         <button
           onClick={handleEnter}
-          className="shimmer relative inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
-          style={{ background: "linear-gradient(135deg, oklch(0.65 0.25 295), oklch(0.60 0.22 330))", boxShadow: "var(--shadow-glow)" }}
+          className="ripple shimmer relative inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105 active:scale-95"
+          style={{ background: "linear-gradient(135deg, oklch(0.65 0.25 295), oklch(0.60 0.22 330))", boxShadow: "var(--shadow-glow)", minHeight: 52 }}
         >
           ✨ Enter VibeSpace
         </button>
@@ -322,6 +335,7 @@ const handleEnter = () => {
     </div>
   </div>
 )}
+
 <MusicPlayer adminPassword="qwer@$()" />
 {showWelcome && (
   <div
