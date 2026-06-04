@@ -204,30 +204,38 @@ const handleEnter = () => {
       <StickyNav />
 {!entered && (
   <div
-    className="fixed inset-0 z-[100] flex items-center justify-center"
-    style={{ background: "oklch(0.08 0.02 285)" }}
+    className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+    style={{ background: "oklch(0.05 0.02 285)" }}
   >
-    <div className="relative text-center px-6">
-      <div className="pointer-events-none absolute -top-32 -left-32 h-64 w-64 rounded-full blur-3xl"
-        style={{ background: "oklch(0.55 0.25 295 / 0.4)" }} />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 h-64 w-64 rounded-full blur-3xl"
-        style={{ background: "oklch(0.50 0.22 320 / 0.35)" }} />
-      <p className="relative text-xs uppercase tracking-[0.4em] text-primary mb-4">welcome to</p>
-      <h1 className="relative font-display text-[clamp(4rem,20vw,10rem)] font-extrabold leading-none tracking-tighter">
+    <Particles />
+    <div className="pointer-events-none absolute -top-32 -left-32 h-72 w-72 rounded-full blur-3xl animate-blob"
+      style={{ background: "oklch(0.55 0.25 295 / 0.45)" }} />
+    <div className="pointer-events-none absolute -bottom-32 -right-32 h-72 w-72 rounded-full blur-3xl animate-blob"
+      style={{ background: "oklch(0.50 0.22 320 / 0.40)", animationDelay: "-6s" }} />
+    <div className="relative w-full max-w-3xl text-center px-6">
+      <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.35em] mb-5"
+        style={{ borderColor: "oklch(0.65 0.25 295 / 0.3)", background: "oklch(0.65 0.25 295 / 0.08)", color: "oklch(0.78 0.20 305)" }}>
+        ✦ Personal Space ✦
+      </div>
+      <h1 className="font-display font-extrabold leading-[0.95] tracking-tighter mx-auto"
+        style={{ fontSize: "clamp(2.2rem, 10vw, 7rem)" }}>
         <span className="text-gradient">Piyush's</span>
         <br />
         <span className="text-white">VibeSpace</span>
       </h1>
-      <p className="relative mt-6 text-sm text-muted-foreground">
+      <p className="mt-6 text-sm text-muted-foreground">
         A personal space — gaming, coding & everything in between
       </p>
-      <button
-        onClick={handleEnter}
-        className="relative mt-10 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-[var(--shadow-glow)]"
-        style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}
-      >
-        ✨ Enter VibeSpace
-      </button>
+      <div className="relative mt-10 inline-block">
+        <span aria-hidden className="absolute inset-0 -m-2 rounded-full pulse-ring" />
+        <button
+          onClick={handleEnter}
+          className="shimmer relative inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+          style={{ background: "linear-gradient(135deg, oklch(0.65 0.25 295), oklch(0.60 0.22 330))", boxShadow: "var(--shadow-glow)" }}
+        >
+          ✨ Enter VibeSpace
+        </button>
+      </div>
     </div>
   </div>
 )}
