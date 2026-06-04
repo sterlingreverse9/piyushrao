@@ -165,7 +165,9 @@ export function PiyushAI() {
       audio.onended = () => { setSpeakingIdx((c) => (c === lastIdx ? null : c)); URL.revokeObjectURL(url); };
       audio.onerror = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
       audio.play();
-    } catch {
+    } catch (err) {
+  alert("ElevenLabs Error: " + String(err));
+
   const synth = window.speechSynthesis;
 
   if (synth) {
