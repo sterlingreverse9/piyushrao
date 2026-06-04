@@ -406,6 +406,9 @@ const handleEnter = () => {
             <h1 className="font-display text-[clamp(4rem,15vw,11rem)] font-extrabold leading-[0.85] tracking-tighter">
               <span className="text-gradient">Piyush</span>
             </h1>
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground min-h-[1.6em]">
+              I'm a <TypingRoles />
+            </p>
             <p className="mt-6 max-w-md text-lg text-muted-foreground sm:text-xl">
               <span className="text-foreground">{age}</span> · Gamer · Vibe Coder ·
               <span className="text-foreground"> Haryana, India</span>
@@ -416,10 +419,10 @@ const handleEnter = () => {
             <div className="mt-5"><VisitorCounter /></div>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <a href="#connect" className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:shadow-[var(--shadow-glow)]">
+              <a href="#connect" className="shimmer group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:scale-[1.03] hover:shadow-[var(--shadow-glow)]">
                 Say hi <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
-              <a href="#about" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:border-primary/40">
+              <a href="#about" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium backdrop-blur transition-all hover:scale-[1.03] hover:border-primary/40">
                 More about me
               </a>
             </div>
@@ -428,17 +431,30 @@ const handleEnter = () => {
           <div className="reveal-on-scroll order-1 mx-auto lg:order-2">
             <div className="relative">
               <div className="absolute -inset-6 rounded-[2rem] blur-2xl"
-                   style={{ background: "var(--gradient-violet)", opacity: 0.4 }} />
-              <div className="relative glass overflow-hidden p-3 animate-float glow-ring">
-                <img src={portrait} alt="Portrait of Piyush"
-                  className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]" />
-                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-background/60 px-4 py-2.5 backdrop-blur">
-                  <span className="font-display text-sm font-bold">PIYUSH</span>
-                  <span className="text-xs text-muted-foreground">2026 · HR</span>
+                   style={{ background: "var(--gradient-violet)", opacity: 0.45 }} />
+              <div className="rotating-border relative overflow-hidden rounded-[1.5rem] animate-float">
+                <div className="glass overflow-hidden p-3 rounded-[1.5rem]">
+                  <img src={portrait} alt="Portrait of Piyush" loading="lazy"
+                    className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]" />
+                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-background/70 px-4 py-2.5 backdrop-blur">
+                    <span className="font-display text-sm font-bold">PIYUSH</span>
+                    <span className="text-xs text-muted-foreground">2026 · HR</span>
+                  </div>
                 </div>
+              </div>
+              <div className="absolute -top-3 -right-3 z-10 rounded-full px-3 py-1.5 text-[11px] font-semibold backdrop-blur"
+                   style={{
+                     background: "oklch(0.65 0.25 295 / 0.18)",
+                     border: "1px solid oklch(0.75 0.28 305 / 0.5)",
+                     color: "oklch(0.92 0.05 305)",
+                     boxShadow: "0 0 24px oklch(0.65 0.25 295 / 0.45)",
+                     animation: "ai-bounce 2.4s ease-in-out infinite",
+                   }}>
+                Open to connect 👋
               </div>
             </div>
           </div>
+
         </div>
       </section>
 
