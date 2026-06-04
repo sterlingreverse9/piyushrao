@@ -174,7 +174,8 @@ export function PiyushAI() {
         u.onend = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
         synth.speak(u);
       }
-    }
+  };
+  speakWithElevenLabs();
   }, [messages, open]);
 
   const toggleMic = () => {
