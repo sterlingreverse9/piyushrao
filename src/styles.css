@@ -321,3 +321,113 @@ button:not(:disabled):active, a:active, [role="button"]:active { transform: scal
 
 
 
+/* ===== Premium Responsive Upgrade (mobile + desktop parity) ===== */
+
+/* Safe-area aware base padding for fixed UI on notch phones */
+:root {
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+html, body { -webkit-tap-highlight-color: transparent; }
+body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
+
+/* Mesh grid bottom layer */
+body::before { z-index: 1; }
+.mesh-floor {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 38vh;
+  pointer-events: none; z-index: 0; opacity: 0.35;
+  perspective: 600px;
+  background:
+    linear-gradient(to top, oklch(0.08 0.02 285) 0%, transparent 60%),
+    linear-gradient(oklch(0.65 0.25 295 / 0.22) 1px, transparent 1px) 0 0 / 60px 60px,
+    linear-gradient(90deg, oklch(0.65 0.25 295 / 0.18) 1px, transparent 1px) 0 0 / 60px 60px;
+  transform: rotateX(60deg) translateZ(0);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(to top, black 30%, transparent 95%);
+}
+@media (max-width: 767px) { .mesh-floor { height: 28vh; opacity: 0.25; } }
+
+/* Touch ripple — pure CSS, attach via class="ripple" */
+.ripple { position: relative; overflow: hidden; isolation: isolate; }
+.ripple::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 8px; height: 8px; border-radius: 999px;
+  background: oklch(0.75 0.28 305 / 0.55);
+  transform: translate(-50%, -50%) scale(0); opacity: 0;
+  pointer-events: none;
+  transition: transform .55s cubic-bezier(.2,.7,.3,1), opacity .55s ease;
+}
+.ripple:active::after { transform: translate(-50%, -50%) scale(40); opacity: 1; transition: transform 0s, opacity 0s; }
+
+/* 3D tilt card — desktop hover lifts forward, mobile uses tap bounce */
+.tilt-3d { transform-style: preserve-3d; transition: transform .35s cubic-bezier(.2,.7,.3,1), box-shadow .35s ease; will-change: transform; }
+@media (hover: hover) and (pointer: fine) {
+  .tilt-3d:hover { transform: perspective(900px) translateZ(18px) rotateX(4deg) rotateY(-4deg); box-shadow: 0 30px 60px -20px oklch(0.55 0.25 295 / 0.45); }
+}
+@media (hover: none) {
+  .tilt-3d:active { transform: scale(0.97); }
+}
+
+/* Heartbeat for pills */
+@keyframes heartbeat { 0%,100% { transform: scale(1); } 25% { transform: scale(1.06); } 40% { transform: scale(0.98); } 60% { transform: scale(1.04); } }
+.heartbeat { animation: heartbeat 2.2s ease-in-out infinite; }
+
+/* Equalizer bars for music playing state */
+@keyframes eq { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+.eq { display: inline-flex; align-items: end; gap: 2px; height: 14px; }
+.eq i { display: block; width: 3px; height: 100%; background: linear-gradient(180deg, var(--primary-glow), var(--primary)); border-radius: 2px; transform-origin: bottom; animation: eq 0.9s ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: .15s; }
+.eq i:nth-child(3) { animation-delay: .3s; }
+.eq i:nth-child(4) { animation-delay: .45s; }
+
+/* Letter-fall heading reveal: wrap with .letter-fall and put .letter spans inside */
+@keyframes letter-fall { from { opacity: 0; transform: translateY(-30px) rotateX(-60deg); } to { opacity: 1; transform: translateY(0) rotateX(0); } }
+.letter-fall .letter { display: inline-block; opacity: 0; animation: letter-fall .6s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* Stagger reveal children */
+.reveal-on-scroll.in-view > .stagger > * { opacity: 0; animation: reveal .6s ease-out forwards; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(1) { animation-delay: .04s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(2) { animation-delay: .12s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(3) { animation-delay: .2s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(4) { animation-delay: .28s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(5) { animation-delay: .36s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(6) { animation-delay: .44s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(7) { animation-delay: .52s; }
+.reveal-on-scroll.in-view > .stagger > *:nth-child(8) { animation-delay: .6s; }
+
+/* Mobile-friendly: bigger tap targets, larger body text, no hover-only effects */
+@media (max-width: 767px) {
+  button, a, [role="button"] { min-height: 44px; }
+  body { font-size: 16.5px; }
+  h1 { font-size: clamp(2.2rem, 9vw, 5rem) !important; }
+  h2 { font-size: clamp(1.6rem, 6.5vw, 3rem); }
+  /* Disable cursor-none on touch (already gated by hover media query, but safe) */
+  body, a, button { cursor: auto; }
+  .lov-cursor, .lov-cursor-ring { display: none !important; }
+  /* Lighter aurora to save GPU */
+  body::after { animation-duration: 30s; opacity: 0.75; }
+}
+
+/* Tablet tuning */
+@media (min-width: 768px) and (max-width: 1024px) {
+  h1 { font-size: clamp(2.6rem, 7vw, 5.5rem); }
+}
+
+/* Bottom safe padding so fixed players/buttons don't cover content */
+.has-fixed-dock { padding-bottom: calc(96px + var(--safe-b)); }
+
+/* Spring-press helper for tappable cards on mobile */
+@media (hover: none) {
+  .press-spring { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .press-spring:active { transform: scale(0.96); }
+}
+
+/* Smooth scrollbar momentum */
+* { -webkit-overflow-scrolling: touch; }
+
+/* Image blur-up placeholder */
+img.blurup { filter: blur(12px); transition: filter .5s ease; }
+img.blurup.loaded { filter: blur(0); }
+
