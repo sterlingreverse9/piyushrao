@@ -257,12 +257,15 @@ function StickyNav() {
 }
 
 function Index() {
-const [showWelcome, setShowWelcome] = useState(() => {
-  const seen = localStorage.getItem("welcome_seen");
-  if (seen && Date.now() - Number(seen) < 50 * 60 * 60 * 1000) return false;
-  return true;
-});
-const [entered, setEntered] = useState(false);
+const [showWelcome, setShowWelcome] = useState(false);
+const [entered, setEntered] = useState(true);
+useEffect(() => {
+  try {
+    const seen = localStorage.getItem("welcome_seen");
+    setShowWelcome(!(seen && Date.now() - Number(seen) < 50 * 60 * 60 * 1000));
+  } catch { /* ignore */ }
+  setEntered(false);
+}, []);
 
 const handleEnter = () => {
   setEntered(true);
@@ -271,6 +274,7 @@ const handleEnter = () => {
     if (audio) audio.play().catch(() => {});
   }, 500);
 };
+
   useReveal();
   const { t } = useT();
   const dob = useMemo(() => new Date(2009, 6, 26), []);
