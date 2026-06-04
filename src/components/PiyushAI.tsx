@@ -166,16 +166,22 @@ export function PiyushAI() {
       audio.onerror = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
       audio.play();
     } catch {
-      const synth = window.speechSynthesis;
-      if (synth) {
-        const u = new SpeechSynthesisUtterance(clean);
-        u.lang = /[\u0900-\u097F]/.test(clean) ? "hi-IN" : "en-IN";
-        u.rate = 0.88; u.pitch = 1.1;
-        u.onend = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
-        synth.speak(u);
-      }
-  };
-  speakWithElevenLabs();
+  const synth = window.speechSynthesis;
+
+  if (synth) {
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = /[\u0900-\u097F]/.test(clean) ? "hi-IN" : "en-IN";
+    u.rate = 0.88;
+    u.pitch = 1.1;
+    u.onend = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
+
+    synth.speak(u);
+  }
+}
+
+};
+
+speakWithElevenLabs();
   }, [messages, open]);
 
   const toggleMic = () => {
