@@ -719,8 +719,8 @@ const handleEnter = () => {
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="reveal-on-scroll">
-      <p className="text-xs uppercase tracking-[0.3em] text-primary">— {eyebrow}</p>
-      <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">{title}</h2>
+      <p className="text-xs uppercase tracking-[0.3em] text-primary"><span className="eyebrow-line">— {eyebrow}</span></p>
+      <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h2>
     </div>
   );
 }
