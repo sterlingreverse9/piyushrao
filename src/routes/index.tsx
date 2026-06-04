@@ -136,6 +136,84 @@ function Particles() {
   );
 }
 
+function TypingRoles() {
+  const roles = useMemo(() => [
+    "Gamer 🎮",
+    "Vibe Coder 💻",
+    "NEET Aspirant 🩺",
+    "Night Owl 🌙",
+    "From Haryana, India 🇮🇳",
+  ], []);
+  const [i, setI] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const full = roles[i];
+    if (!deleting && text === full) {
+      const t = setTimeout(() => setDeleting(true), 1800);
+      return () => clearTimeout(t);
+    }
+    if (deleting && text === "") {
+      setDeleting(false);
+      setI((p) => (p + 1) % roles.length);
+      return;
+    }
+    const t = setTimeout(() => {
+      setText((prev) => deleting ? full.slice(0, prev.length - 1) : full.slice(0, prev.length + 1));
+    }, deleting ? 35 : 70);
+    return () => clearTimeout(t);
+  }, [text, deleting, i, roles]);
+
+  return (
+    <span className="text-foreground">{text}<span className="caret" /></span>
+  );
+}
+
+function CustomCursor() {
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    let rx = 0, ry = 0, dx = 0, dy = 0, raf = 0;
+    const move = (e: MouseEvent) => {
+      dx = e.clientX; dy = e.clientY;
+      if (dotRef.current) { dotRef.current.style.left = dx + "px"; dotRef.current.style.top = dy + "px"; }
+    };
+    const loop = () => {
+      rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
+      if (ringRef.current) { ringRef.current.style.left = rx + "px"; ringRef.current.style.top = ry + "px"; }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    const over = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      const hov = !!t.closest('a, button, [role="button"], input, textarea, select, label');
+      dotRef.current?.classList.toggle("hovering", hov);
+      ringRef.current?.classList.toggle("hovering", hov);
+    };
+    const down = () => dotRef.current?.classList.add("clicking");
+    const up = () => dotRef.current?.classList.remove("clicking");
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseover", over);
+    window.addEventListener("mousedown", down);
+    window.addEventListener("mouseup", up);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseover", over);
+      window.removeEventListener("mousedown", down);
+      window.removeEventListener("mouseup", up);
+    };
+  }, []);
+  return (
+    <>
+      <div ref={ringRef} className="lov-cursor-ring" />
+      <div ref={dotRef} className="lov-cursor" />
+    </>
+  );
+}
+
 function StickyNav() {
   const { t } = useT();
   const [scrolled, setScrolled] = useState(false);
@@ -201,33 +279,42 @@ const handleEnter = () => {
 
   return (
     <div id="top" className="relative z-10 min-h-screen font-body">
+      <CustomCursor />
       <StickyNav />
 {!entered && (
   <div
-    className="fixed inset-0 z-[100] flex items-center justify-center"
-    style={{ background: "oklch(0.08 0.02 285)" }}
+    className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+    style={{ background: "oklch(0.05 0.02 285)" }}
   >
-    <div className="relative text-center px-6">
-      <div className="pointer-events-none absolute -top-32 -left-32 h-64 w-64 rounded-full blur-3xl"
-        style={{ background: "oklch(0.55 0.25 295 / 0.4)" }} />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 h-64 w-64 rounded-full blur-3xl"
-        style={{ background: "oklch(0.50 0.22 320 / 0.35)" }} />
-      <p className="relative text-xs uppercase tracking-[0.4em] text-primary mb-4">welcome to</p>
-      <h1 className="relative font-display text-[clamp(4rem,20vw,10rem)] font-extrabold leading-none tracking-tighter">
+    <Particles />
+    <div className="pointer-events-none absolute -top-32 -left-32 h-72 w-72 rounded-full blur-3xl animate-blob"
+      style={{ background: "oklch(0.55 0.25 295 / 0.45)" }} />
+    <div className="pointer-events-none absolute -bottom-32 -right-32 h-72 w-72 rounded-full blur-3xl animate-blob"
+      style={{ background: "oklch(0.50 0.22 320 / 0.40)", animationDelay: "-6s" }} />
+    <div className="relative w-full max-w-3xl text-center px-6">
+      <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.35em] mb-5"
+        style={{ borderColor: "oklch(0.65 0.25 295 / 0.3)", background: "oklch(0.65 0.25 295 / 0.08)", color: "oklch(0.78 0.20 305)" }}>
+        ✦ Personal Space ✦
+      </div>
+      <h1 className="font-display font-extrabold leading-[0.95] tracking-tighter mx-auto"
+        style={{ fontSize: "clamp(2.2rem, 10vw, 7rem)" }}>
         <span className="text-gradient">Piyush's</span>
         <br />
         <span className="text-white">VibeSpace</span>
       </h1>
-      <p className="relative mt-6 text-sm text-muted-foreground">
+      <p className="mt-6 text-sm text-muted-foreground">
         A personal space — gaming, coding & everything in between
       </p>
-      <button
-        onClick={handleEnter}
-        className="relative mt-10 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-[var(--shadow-glow)]"
-        style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}
-      >
-        ✨ Enter VibeSpace
-      </button>
+      <div className="relative mt-10 inline-block">
+        <span aria-hidden className="absolute inset-0 -m-2 rounded-full pulse-ring" />
+        <button
+          onClick={handleEnter}
+          className="shimmer relative inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+          style={{ background: "linear-gradient(135deg, oklch(0.65 0.25 295), oklch(0.60 0.22 330))", boxShadow: "var(--shadow-glow)" }}
+        >
+          ✨ Enter VibeSpace
+        </button>
+      </div>
     </div>
   </div>
 )}
@@ -320,6 +407,9 @@ const handleEnter = () => {
             <h1 className="font-display text-[clamp(4rem,15vw,11rem)] font-extrabold leading-[0.85] tracking-tighter">
               <span className="text-gradient">Piyush</span>
             </h1>
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground min-h-[1.6em]">
+              I'm a <TypingRoles />
+            </p>
             <p className="mt-6 max-w-md text-lg text-muted-foreground sm:text-xl">
               <span className="text-foreground">{age}</span> · Gamer · Vibe Coder ·
               <span className="text-foreground"> Haryana, India</span>
@@ -330,10 +420,10 @@ const handleEnter = () => {
             <div className="mt-5"><VisitorCounter /></div>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <a href="#connect" className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:shadow-[var(--shadow-glow)]">
+              <a href="#connect" className="shimmer group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:scale-[1.03] hover:shadow-[var(--shadow-glow)]">
                 Say hi <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
-              <a href="#about" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:border-primary/40">
+              <a href="#about" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium backdrop-blur transition-all hover:scale-[1.03] hover:border-primary/40">
                 More about me
               </a>
             </div>
@@ -342,17 +432,30 @@ const handleEnter = () => {
           <div className="reveal-on-scroll order-1 mx-auto lg:order-2">
             <div className="relative">
               <div className="absolute -inset-6 rounded-[2rem] blur-2xl"
-                   style={{ background: "var(--gradient-violet)", opacity: 0.4 }} />
-              <div className="relative glass overflow-hidden p-3 animate-float glow-ring">
-                <img src={portrait} alt="Portrait of Piyush"
-                  className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]" />
-                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-background/60 px-4 py-2.5 backdrop-blur">
-                  <span className="font-display text-sm font-bold">PIYUSH</span>
-                  <span className="text-xs text-muted-foreground">2026 · HR</span>
+                   style={{ background: "var(--gradient-violet)", opacity: 0.45 }} />
+              <div className="rotating-border relative overflow-hidden rounded-[1.5rem] animate-float">
+                <div className="glass overflow-hidden p-3 rounded-[1.5rem]">
+                  <img src={portrait} alt="Portrait of Piyush" loading="lazy"
+                    className="block w-[280px] rounded-2xl sm:w-[340px] lg:w-[380px]" />
+                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-background/70 px-4 py-2.5 backdrop-blur">
+                    <span className="font-display text-sm font-bold">PIYUSH</span>
+                    <span className="text-xs text-muted-foreground">2026 · HR</span>
+                  </div>
                 </div>
+              </div>
+              <div className="absolute -top-3 -right-3 z-10 rounded-full px-3 py-1.5 text-[11px] font-semibold backdrop-blur"
+                   style={{
+                     background: "oklch(0.65 0.25 295 / 0.18)",
+                     border: "1px solid oklch(0.75 0.28 305 / 0.5)",
+                     color: "oklch(0.92 0.05 305)",
+                     boxShadow: "0 0 24px oklch(0.65 0.25 295 / 0.45)",
+                     animation: "ai-bounce 2.4s ease-in-out infinite",
+                   }}>
+                Open to connect 👋
               </div>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -617,8 +720,8 @@ const handleEnter = () => {
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="reveal-on-scroll">
-      <p className="text-xs uppercase tracking-[0.3em] text-primary">— {eyebrow}</p>
-      <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">{title}</h2>
+      <p className="text-xs uppercase tracking-[0.3em] text-primary"><span className="eyebrow-line">— {eyebrow}</span></p>
+      <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h2>
     </div>
   );
 }
