@@ -279,6 +279,7 @@ const handleEnter = () => {
 
   return (
     <div id="top" className="relative z-10 min-h-screen font-body">
+      <CustomCursor />
       <StickyNav />
 {!entered && (
   <div
