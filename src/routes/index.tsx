@@ -714,22 +714,52 @@ const handleEnter = () => {
 
       {/* FOOTER */}
       <footer className="relative border-t border-border px-6 py-10 sm:px-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <div>
-            <p className="font-display text-lg font-bold">Piyush</p>
-            <p className="text-sm text-muted-foreground">Built with vibes ✨</p>
+        <div className="mx-auto max-w-6xl space-y-8">
+          {/* Special Thanks */}
+          <div
+            className="rounded-2xl border p-5 sm:p-6"
+            style={{
+              borderColor: "oklch(0.68 0.22 295 / 0.25)",
+              background: "linear-gradient(135deg, oklch(0.16 0.03 285 / 0.6), oklch(0.12 0.02 285 / 0.4))",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            <h3 className="font-display text-lg font-bold sm:text-xl">❤️ Special Thanks</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              This website would not have been possible without the support, testing, feedback, and troubleshooting help from:
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-2 text-sm">
+              <li className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-medium">Rihan</li>
+              <li className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-medium">Naveen</li>
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Thank you for helping test features, find bugs, and improve the overall experience.
+            </p>
+            <p className="mt-2 text-sm font-medium">— Piyush</p>
           </div>
-          <div className="flex gap-3">
-            {socials.slice(0, 3).map((s, i) => (
-              <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-all hover:border-primary/40 hover:text-primary">
-                <s.Icon className="h-4 w-4" />
-              </a>
-            ))}
+
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div>
+              <p className="font-display text-lg font-bold">Piyush</p>
+              <p className="text-sm text-muted-foreground">Built with vibes ✨</p>
+            </div>
+            <div className="flex gap-3">
+              {socials.slice(0, 3).map((s, i) => (
+                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-all hover:border-primary/40 hover:text-primary">
+                  <s.Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} · Haryana, India</p>
           </div>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} · Haryana, India</p>
+
+          <p className="border-t border-border/50 pt-4 text-center text-xs text-muted-foreground">
+            Built by Piyush · Special thanks to Rihan &amp; Naveen
+          </p>
         </div>
       </footer>
+
       <PiyushAI />
     </div>
   );
