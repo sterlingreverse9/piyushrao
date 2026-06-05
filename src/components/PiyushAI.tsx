@@ -269,17 +269,13 @@ export function PiyushAI() {
   };
 
   const toggleSpeak = (idx: number, text: string) => {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    if (speakingIdx === idx) { synth.cancel(); setSpeakingIdx(null); return; }
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/https?:\/\/\S+/g, ""));
-    u.lang = /[\u0900-\u097F]/.test(text) ? "hi-IN" : "en-IN";
-    u.onend = () => setSpeakingIdx(null);
-    u.onerror = () => setSpeakingIdx(null);
-    setSpeakingIdx(idx);
-    synth.speak(u);
+    if (speakingIdx === idx) { stopAudio(); setSpeakingIdx(null); return; }
+    stopAudio();
+    const clean = text.replace(/https?:\/\/\S+/g, "").trim();
+    if (!clean) return;
+    sarvamSpeak(clean, idx);
   };
+
 
   const submitPwd = (e: React.FormEvent) => {
     e.preventDefault();
