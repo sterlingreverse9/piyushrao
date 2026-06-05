@@ -63,6 +63,83 @@ export function PiyushAI() {
   const inputRef = useRef<HTMLInputElement>(null);
   const recogRef = useRef<any>(null);
   const lastSpokenRef = useRef<number>(-1);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
+
+  const stopAudio = useCallback(() => {
+    try {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.src = "";
+      }
+    } catch {}
+    if (currentAudioUrlRef.current) {
+      try { URL.revokeObjectURL(currentAudioUrlRef.current); } catch {}
+      currentAudioUrlRef.current = null;
+    }
+    currentAudioRef.current = null;
+    if (typeof window !== "undefined") {
+      try { window.speechSynthesis?.cancel(); } catch {}
+    }
+  }, []);
+
+  const browserSpeak = useCallback((text: string, idx: number) => {
+    if (typeof window === "undefined") return;
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = /[\u0900-\u097F]/.test(text) ? "hi-IN" : "en-IN";
+    u.rate = 0.95;
+    u.pitch = 1.05;
+    u.onend = () => setSpeakingIdx((c) => (c === idx ? null : c));
+    u.onerror = () => setSpeakingIdx((c) => (c === idx ? null : c));
+    setSpeakingIdx(idx);
+    synth.speak(u);
+  }, []);
+
+  const sarvamSpeak = useCallback(async (text: string, idx: number) => {
+    if (typeof window === "undefined") return;
+    setSpeakingIdx(idx);
+    try {
+      const res = await fetch("/api/sarvam-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(`tts ${res.status}`);
+      const { audio } = (await res.json()) as { audio?: string };
+      if (!audio) throw new Error("no audio");
+
+      // base64 wav → blob URL
+      const bin = atob(audio);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+
+      stopAudio();
+      const a = new Audio(url);
+      currentAudioRef.current = a;
+      currentAudioUrlRef.current = url;
+      a.onended = () => {
+        setSpeakingIdx((c) => (c === idx ? null : c));
+        if (currentAudioUrlRef.current === url) {
+          URL.revokeObjectURL(url);
+          currentAudioUrlRef.current = null;
+          currentAudioRef.current = null;
+        }
+      };
+      a.onerror = () => {
+        setSpeakingIdx((c) => (c === idx ? null : c));
+        browserSpeak(text, idx);
+      };
+      await a.play();
+    } catch (err) {
+      console.warn("Sarvam TTS failed, falling back to browser speech:", err);
+      browserSpeak(text, idx);
+    }
+  }, [browserSpeak, stopAudio]);
+
 
   // Load admin state & knowledge
   useEffect(() => {
