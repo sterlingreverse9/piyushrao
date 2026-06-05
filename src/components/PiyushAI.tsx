@@ -209,7 +209,7 @@ export function PiyushAI() {
     }
   }, [messages, loading, knowledge]);
 
-  // Auto-speak new assistant message
+  // Auto-speak new assistant message via Sarvam (with browser fallback)
   useEffect(() => {
     if (!open) return;
     const lastIdx = messages.length - 1;
@@ -220,53 +220,9 @@ export function PiyushAI() {
     lastSpokenRef.current = lastIdx;
     const clean = last.content.replace(/https?:\/\/\S+/g, "").trim();
     if (!clean) return;
-    const speakWithElevenLabs = async () => {
-    setSpeakingIdx(lastIdx);
-    try {
-      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVEN_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: clean,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-        }),
-      });
-      if (!res.ok) {
-  const errorText = await res.text();
-  throw new Error(
-    `ElevenLabs failed (${res.status}): ${errorText}`
-  );
-}
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => { setSpeakingIdx((c) => (c === lastIdx ? null : c)); URL.revokeObjectURL(url); };
-      audio.onerror = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
-      audio.play();
-    } catch (err) {
-  alert("ElevenLabs Error: " + String(err));
+    sarvamSpeak(clean, lastIdx);
+  }, [messages, open, sarvamSpeak]);
 
-  const synth = window.speechSynthesis;
-
-  if (synth) {
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = /[\u0900-\u097F]/.test(clean) ? "hi-IN" : "en-IN";
-    u.rate = 0.88;
-    u.pitch = 1.1;
-    u.onend = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
-
-    synth.speak(u);
-  }
-}
-
-};
-
-speakWithElevenLabs();
-  }, [messages, open]);
 
   const toggleMic = () => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
