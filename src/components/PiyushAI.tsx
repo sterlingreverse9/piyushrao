@@ -169,8 +169,9 @@ export function PiyushAI() {
 
   useEffect(() => () => {
     try { recogRef.current?.stop?.(); } catch {}
-    try { window.speechSynthesis?.cancel(); } catch {}
-  }, []);
+    stopAudio();
+  }, [stopAudio]);
+
 
   const send = useCallback(async (text: string) => {
     const content = text.trim();
