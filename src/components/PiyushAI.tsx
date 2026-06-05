@@ -236,8 +236,9 @@ export function PiyushAI() {
       return;
     }
     // Stop any ongoing TTS so the mic can hear properly
-    try { window.speechSynthesis?.cancel(); } catch {}
+    stopAudio();
     setSpeakingIdx(null);
+
 
     const r = new SR();
     r.lang = "en-IN";
