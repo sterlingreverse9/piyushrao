@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSarvamTtsRouteImport } from './routes/api/sarvam-tts'
 import { Route as ApiPiyushAiRouteImport } from './routes/api/piyush-ai'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSarvamTtsRoute = ApiSarvamTtsRouteImport.update({
+  id: '/api/sarvam-tts',
+  path: '/api/sarvam-tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPiyushAiRoute = ApiPiyushAiRouteImport.update({
@@ -26,27 +32,31 @@ const ApiPiyushAiRoute = ApiPiyushAiRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/piyush-ai': typeof ApiPiyushAiRoute
+  '/api/sarvam-tts': typeof ApiSarvamTtsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/piyush-ai': typeof ApiPiyushAiRoute
+  '/api/sarvam-tts': typeof ApiSarvamTtsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/piyush-ai': typeof ApiPiyushAiRoute
+  '/api/sarvam-tts': typeof ApiSarvamTtsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/piyush-ai'
+  fullPaths: '/' | '/api/piyush-ai' | '/api/sarvam-tts'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/piyush-ai'
-  id: '__root__' | '/' | '/api/piyush-ai'
+  to: '/' | '/api/piyush-ai' | '/api/sarvam-tts'
+  id: '__root__' | '/' | '/api/piyush-ai' | '/api/sarvam-tts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPiyushAiRoute: typeof ApiPiyushAiRoute
+  ApiSarvamTtsRoute: typeof ApiSarvamTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sarvam-tts': {
+      id: '/api/sarvam-tts'
+      path: '/api/sarvam-tts'
+      fullPath: '/api/sarvam-tts'
+      preLoaderRoute: typeof ApiSarvamTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/piyush-ai': {
@@ -71,17 +88,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPiyushAiRoute: ApiPiyushAiRoute,
+  ApiSarvamTtsRoute: ApiSarvamTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

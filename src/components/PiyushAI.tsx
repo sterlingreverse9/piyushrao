@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MessageCircle, X, Send, Sparkles, Mic, MicOff, Volume2, VolumeX, ExternalLink, Lock, Unlock, Trash2, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-const ELEVEN_VOICE_ID = "1qEiC6qsybMkmnNdVMbK";
-const ELEVEN_API_KEY = "sk_4b462662a574f6dd909d4655bc8c74424957bc221970f71a";
+
 
 type Msg = { role: "user" | "assistant"; content: string; ts: number };
 type Knowledge = { id: string; info: string; created_at: string };
@@ -64,6 +63,83 @@ export function PiyushAI() {
   const inputRef = useRef<HTMLInputElement>(null);
   const recogRef = useRef<any>(null);
   const lastSpokenRef = useRef<number>(-1);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
+
+  const stopAudio = useCallback(() => {
+    try {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.src = "";
+      }
+    } catch {}
+    if (currentAudioUrlRef.current) {
+      try { URL.revokeObjectURL(currentAudioUrlRef.current); } catch {}
+      currentAudioUrlRef.current = null;
+    }
+    currentAudioRef.current = null;
+    if (typeof window !== "undefined") {
+      try { window.speechSynthesis?.cancel(); } catch {}
+    }
+  }, []);
+
+  const browserSpeak = useCallback((text: string, idx: number) => {
+    if (typeof window === "undefined") return;
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = /[\u0900-\u097F]/.test(text) ? "hi-IN" : "en-IN";
+    u.rate = 0.95;
+    u.pitch = 1.05;
+    u.onend = () => setSpeakingIdx((c) => (c === idx ? null : c));
+    u.onerror = () => setSpeakingIdx((c) => (c === idx ? null : c));
+    setSpeakingIdx(idx);
+    synth.speak(u);
+  }, []);
+
+  const sarvamSpeak = useCallback(async (text: string, idx: number) => {
+    if (typeof window === "undefined") return;
+    setSpeakingIdx(idx);
+    try {
+      const res = await fetch("/api/sarvam-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(`tts ${res.status}`);
+      const { audio } = (await res.json()) as { audio?: string };
+      if (!audio) throw new Error("no audio");
+
+      // base64 wav → blob URL
+      const bin = atob(audio);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+
+      stopAudio();
+      const a = new Audio(url);
+      currentAudioRef.current = a;
+      currentAudioUrlRef.current = url;
+      a.onended = () => {
+        setSpeakingIdx((c) => (c === idx ? null : c));
+        if (currentAudioUrlRef.current === url) {
+          URL.revokeObjectURL(url);
+          currentAudioUrlRef.current = null;
+          currentAudioRef.current = null;
+        }
+      };
+      a.onerror = () => {
+        setSpeakingIdx((c) => (c === idx ? null : c));
+        browserSpeak(text, idx);
+      };
+      await a.play();
+    } catch (err) {
+      console.warn("Sarvam TTS failed, falling back to browser speech:", err);
+      browserSpeak(text, idx);
+    }
+  }, [browserSpeak, stopAudio]);
+
 
   // Load admin state & knowledge
   useEffect(() => {
@@ -93,8 +169,9 @@ export function PiyushAI() {
 
   useEffect(() => () => {
     try { recogRef.current?.stop?.(); } catch {}
-    try { window.speechSynthesis?.cancel(); } catch {}
-  }, []);
+    stopAudio();
+  }, [stopAudio]);
+
 
   const send = useCallback(async (text: string) => {
     const content = text.trim();
@@ -132,7 +209,7 @@ export function PiyushAI() {
     }
   }, [messages, loading, knowledge]);
 
-  // Auto-speak new assistant message
+  // Auto-speak new assistant message via Sarvam (with browser fallback)
   useEffect(() => {
     if (!open) return;
     const lastIdx = messages.length - 1;
@@ -143,53 +220,9 @@ export function PiyushAI() {
     lastSpokenRef.current = lastIdx;
     const clean = last.content.replace(/https?:\/\/\S+/g, "").trim();
     if (!clean) return;
-    const speakWithElevenLabs = async () => {
-    setSpeakingIdx(lastIdx);
-    try {
-      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVEN_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: clean,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-        }),
-      });
-      if (!res.ok) {
-  const errorText = await res.text();
-  throw new Error(
-    `ElevenLabs failed (${res.status}): ${errorText}`
-  );
-}
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => { setSpeakingIdx((c) => (c === lastIdx ? null : c)); URL.revokeObjectURL(url); };
-      audio.onerror = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
-      audio.play();
-    } catch (err) {
-  alert("ElevenLabs Error: " + String(err));
+    sarvamSpeak(clean, lastIdx);
+  }, [messages, open, sarvamSpeak]);
 
-  const synth = window.speechSynthesis;
-
-  if (synth) {
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = /[\u0900-\u097F]/.test(clean) ? "hi-IN" : "en-IN";
-    u.rate = 0.88;
-    u.pitch = 1.1;
-    u.onend = () => setSpeakingIdx((c) => (c === lastIdx ? null : c));
-
-    synth.speak(u);
-  }
-}
-
-};
-
-speakWithElevenLabs();
-  }, [messages, open]);
 
   const toggleMic = () => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -203,8 +236,9 @@ speakWithElevenLabs();
       return;
     }
     // Stop any ongoing TTS so the mic can hear properly
-    try { window.speechSynthesis?.cancel(); } catch {}
+    stopAudio();
     setSpeakingIdx(null);
+
 
     const r = new SR();
     r.lang = "en-IN";
@@ -235,17 +269,13 @@ speakWithElevenLabs();
   };
 
   const toggleSpeak = (idx: number, text: string) => {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    if (speakingIdx === idx) { synth.cancel(); setSpeakingIdx(null); return; }
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/https?:\/\/\S+/g, ""));
-    u.lang = /[\u0900-\u097F]/.test(text) ? "hi-IN" : "en-IN";
-    u.onend = () => setSpeakingIdx(null);
-    u.onerror = () => setSpeakingIdx(null);
-    setSpeakingIdx(idx);
-    synth.speak(u);
+    if (speakingIdx === idx) { stopAudio(); setSpeakingIdx(null); return; }
+    stopAudio();
+    const clean = text.replace(/https?:\/\/\S+/g, "").trim();
+    if (!clean) return;
+    sarvamSpeak(clean, idx);
   };
+
 
   const submitPwd = (e: React.FormEvent) => {
     e.preventDefault();
