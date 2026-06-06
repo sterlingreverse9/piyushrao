@@ -217,18 +217,29 @@ export function PiyushAI() {
     setInput("");
     setLoading(true);
     try {
-      const payload = next.filter((m) => m !== GREETING).map(({ role, content }) => ({ role, content }));
+      // Skip the synthetic greeting (always at index 0)
+      const payload = next.slice(1).map(({ role, content }) => ({ role, content }));
       const res = await fetch("/api/piyush-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: payload,
           knowledge: knowledge.map((k) => k.info),
+          visitor: profile ? { name: profile.name, username: profile.username } : undefined,
+          history,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      setMessages([...next, { role: "assistant", content: data.reply, ts: Date.now() }]);
+      const reply: string = data.reply;
+      setMessages([...next, { role: "assistant", content: reply, ts: Date.now() }]);
+
+      // Persist conversation + bump counter (fire-and-forget, safe)
+      if (profile) {
+        saveConversation(profile, content, reply);
+        incrementMessages(profile).then((p) => setProfile(p));
+        setHistory((h) => [...h, { user_message: content, ai_response: reply }].slice(-5));
+      }
     } catch {
       setMessages([
         ...next,
@@ -237,7 +248,8 @@ export function PiyushAI() {
     } finally {
       setLoading(false);
     }
-  }, [messages, loading, knowledge]);
+  }, [messages, loading, knowledge, profile, history]);
+
 
   // Auto-speak new assistant message via Sarvam (with browser fallback)
   useEffect(() => {
