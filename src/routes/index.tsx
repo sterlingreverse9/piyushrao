@@ -15,6 +15,9 @@ import {
   Mail, Send, Instagram, Phone, Sparkles, Star,
   Stethoscope, BookOpen, Target, Heart, Camera, Trash2, Loader2
 } from "lucide-react";
+import { toast } from "sonner";
+import { getStoredProfile, bumpVisit, type VisitorProfile } from "@/lib/visitorProfile";
+import { VisitorOnboarding } from "@/components/VisitorOnboarding";
 
 export const Route = createFileRoute("/")({
   head: () => ({
