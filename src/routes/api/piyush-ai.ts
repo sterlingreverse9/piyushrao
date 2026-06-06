@@ -50,6 +50,7 @@ STYLE:
 - Friendly, natural, conversational. Light emoji okay, don't overdo it.
 - 2–5 sentences typically. Speak as "I" (you ARE Piyush's digital twin) or "Piyush" — both fine.
 - Be warm about friends, family, school.
+- Address the visitor by their first name when natural (not in every message — feels robotic).
 
 SMART LINKS — when the user clearly asks to open/show one of these, include the URL on its own line so the UI can detect it:
 - Telegram → https://t.me/mrpuppyx
@@ -62,29 +63,46 @@ ${KNOWLEDGE}
 
 Today's date: ${new Date().toISOString().slice(0, 10)}.`;
 
+type Visitor = { name?: string; username?: string };
+type HistoryItem = { user_message?: string; ai_response?: string };
+
 export const Route = createFileRoute("/api/piyush-ai")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { messages, knowledge } = (await request.json()) as {
+          const body = (await request.json()) as {
             messages: { role: "user" | "assistant"; content: string }[];
             knowledge?: string[];
+            visitor?: Visitor;
+            history?: HistoryItem[];
           };
 
           const key = process.env.LOVABLE_API_KEY;
           if (!key) return new Response(JSON.stringify({ error: "Missing API key" }), { status: 500 });
 
-          const extra = Array.isArray(knowledge) && knowledge.length
-            ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
+          const extraKnowledge = Array.isArray(body.knowledge) && body.knowledge.length
+            ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${body.knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
             : "";
+
+          const visitorBlock = body.visitor?.name
+            ? `\n\nVISITOR CONTEXT:\nYou are talking to ${body.visitor.name}${body.visitor.username ? ` (username: ${body.visitor.username})` : ""}. Use their first name occasionally to feel personal.`
+            : "";
+
+          const historyBlock = Array.isArray(body.history) && body.history.length
+            ? `\n\nRECENT CONVERSATION HISTORY WITH THIS VISITOR (oldest first, for continuity — do not repeat verbatim):\n${body.history
+                .map((h, i) => `${i + 1}. ${body.visitor?.name ?? "User"}: ${h.user_message ?? ""}\n   You: ${h.ai_response ?? ""}`)
+                .join("\n")}`
+            : "";
+
+          const system = SYSTEM_PROMPT + extraKnowledge + visitorBlock + historyBlock;
 
           const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
-              messages: [{ role: "system", content: SYSTEM_PROMPT + extra }, ...messages.slice(-20)],
+              messages: [{ role: "system", content: system }, ...body.messages.slice(-20)],
             }),
           });
 

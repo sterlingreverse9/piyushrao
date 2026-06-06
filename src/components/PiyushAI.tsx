@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MessageCircle, X, Send, Sparkles, Mic, MicOff, Volume2, VolumeX, ExternalLink, Lock, Unlock, Trash2, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  getStoredProfile,
+  incrementMessages,
+  loadRecentConversations,
+  saveConversation,
+  type VisitorProfile,
+} from "@/lib/visitorProfile";
 
 
 type Msg = { role: "user" | "assistant"; content: string; ts: number };
 type Knowledge = { id: string; info: string; created_at: string };
+type HistoryItem = { user_message: string; ai_response: string };
 
 const ADMIN_PASSWORD = "qwer123@$()";
 const ADMIN_SESSION_KEY = "piyush.ai.admin.unlocked";
@@ -19,12 +27,15 @@ const SUGGESTED = [
   "Open WhatsApp",
 ];
 
-const GREETING: Msg = {
-  role: "assistant",
-  ts: Date.now(),
-  content:
-    "Hey 👋 I'm Piyush AI.\n\nI'm a digital version of Piyush and can tell you about his journey, hobbies, education, interests, projects, and website.\n\nYou can type or tap the 🎤 to talk — I'll auto-send when you stop speaking and read my reply aloud.",
-};
+function buildGreeting(name?: string): Msg {
+  return {
+    role: "assistant",
+    ts: Date.now(),
+    content: name
+      ? `Hey ${name} 👋 I'm Piyush AI — a digital version of Piyush.\n\nAsk me anything about his journey, hobbies, education, projects, or this site. You can type or tap the 🎤 to talk.`
+      : "Hey 👋 I'm Piyush AI.\n\nI'm a digital version of Piyush and can tell you about his journey, hobbies, education, interests, projects, and website.\n\nYou can type or tap the 🎤 to talk — I'll auto-send when you stop speaking and read my reply aloud.",
+  };
+}
 
 const LINK_MAP: { match: RegExp; url: string }[] = [
   { match: /open\s+telegram|telegram\s+(link|open)/i, url: "https://t.me/mrpuppyx" },
@@ -45,7 +56,9 @@ function fmtTime(ts: number) {
 
 export function PiyushAI() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [profile, setProfile] = useState<VisitorProfile | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([buildGreeting()]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
@@ -58,6 +71,23 @@ export function PiyushAI() {
   const [pwdError, setPwdError] = useState(false);
   const [newInfo, setNewInfo] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Load visitor profile + recent conversations on mount (client-only)
+  useEffect(() => {
+    const p = getStoredProfile();
+    if (!p) return;
+    setProfile(p);
+    setMessages([buildGreeting(p.name)]);
+    loadRecentConversations(p.visitor_id, 5).then((rows) => {
+      setHistory(
+        rows.map((r: any) => ({
+          user_message: r.user_message ?? "",
+          ai_response: r.ai_response ?? "",
+        }))
+      );
+    });
+  }, []);
+
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -187,18 +217,29 @@ export function PiyushAI() {
     setInput("");
     setLoading(true);
     try {
-      const payload = next.filter((m) => m !== GREETING).map(({ role, content }) => ({ role, content }));
+      // Skip the synthetic greeting (always at index 0)
+      const payload = next.slice(1).map(({ role, content }) => ({ role, content }));
       const res = await fetch("/api/piyush-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: payload,
           knowledge: knowledge.map((k) => k.info),
+          visitor: profile ? { name: profile.name, username: profile.username } : undefined,
+          history,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      setMessages([...next, { role: "assistant", content: data.reply, ts: Date.now() }]);
+      const reply: string = data.reply;
+      setMessages([...next, { role: "assistant", content: reply, ts: Date.now() }]);
+
+      // Persist conversation + bump counter (fire-and-forget, safe)
+      if (profile) {
+        saveConversation(profile, content, reply);
+        incrementMessages(profile).then((p) => setProfile(p));
+        setHistory((h) => [...h, { user_message: content, ai_response: reply }].slice(-5));
+      }
     } catch {
       setMessages([
         ...next,
@@ -207,7 +248,8 @@ export function PiyushAI() {
     } finally {
       setLoading(false);
     }
-  }, [messages, loading, knowledge]);
+  }, [messages, loading, knowledge, profile, history]);
+
 
   // Auto-speak new assistant message via Sarvam (with browser fallback)
   useEffect(() => {

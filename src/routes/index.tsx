@@ -15,6 +15,9 @@ import {
   Mail, Send, Instagram, Phone, Sparkles, Star,
   Stethoscope, BookOpen, Target, Heart, Camera, Trash2, Loader2
 } from "lucide-react";
+import { toast } from "sonner";
+import { getStoredProfile, bumpVisit, type VisitorProfile } from "@/lib/visitorProfile";
+import { VisitorOnboarding } from "@/components/VisitorOnboarding";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -257,22 +260,47 @@ function StickyNav() {
 }
 
 function Index() {
-const [showWelcome, setShowWelcome] = useState(false);
 const [entered, setEntered] = useState(true);
+const [showOnboarding, setShowOnboarding] = useState(false);
+const [profile, setProfile] = useState<VisitorProfile | null>(null);
+
 useEffect(() => {
-  try {
-    const seen = localStorage.getItem("welcome_seen");
-    setShowWelcome(!(seen && Date.now() - Number(seen) < 50 * 60 * 60 * 1000));
-  } catch { /* ignore */ }
-  setEntered(false);
+  // Client-only bootstrap to avoid SSR/hydration mismatch
+  const p = getStoredProfile();
+  if (p) {
+    setProfile(p);
+    setEntered(true);
+    bumpVisit(p).then((np) => setProfile(np));
+    toast.success(`Welcome back, ${p.name} 👋`, { duration: 3000 });
+  } else {
+    setEntered(false);
+  }
 }, []);
 
-const handleEnter = () => {
-  setEntered(true);
+const startMusic = () => {
   setTimeout(() => {
     const audio = document.querySelector("audio");
     if (audio) audio.play().catch(() => {});
   }, 500);
+};
+
+const handleEnter = () => {
+  const existing = getStoredProfile();
+  if (existing) {
+    setProfile(existing);
+    setEntered(true);
+    startMusic();
+  } else {
+    setShowOnboarding(true);
+  }
+};
+
+const handleOnboarded = (p: VisitorProfile) => {
+  setProfile(p);
+  setShowOnboarding(false);
+  setEntered(true);
+  toast.success(`Welcome, ${p.name}! Your username is @${p.username}`, { duration: 4500 });
+  startMusic();
 };
 
   useReveal();
@@ -337,76 +365,7 @@ const handleEnter = () => {
 )}
 
 <MusicPlayer adminPassword="qwer@$()" />
-{showWelcome && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    style={{ background: "oklch(0.08 0.02 285 / 0.85)", backdropFilter: "blur(20px)" }}
-    onClick={() => { setShowWelcome(false); localStorage.setItem("welcome_seen", String(Date.now())); }}
-  >
-    <div
-      className="relative w-full max-w-md overflow-hidden rounded-3xl p-8 text-center"
-      style={{
-        background: "linear-gradient(160deg, oklch(0.18 0.05 295 / 0.95), oklch(0.13 0.04 270 / 0.98))",
-        border: "1px solid oklch(0.65 0.22 295 / 0.3)",
-        boxShadow: "0 0 80px oklch(0.55 0.25 295 / 0.25), 0 25px 60px -15px oklch(0 0 0 / 0.6)",
-      }}
-      onClick={e => e.stopPropagation()}
-    >
-      <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full blur-3xl"
-        style={{ background: "oklch(0.55 0.25 295 / 0.3)" }} />
-      <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full blur-3xl"
-        style={{ background: "oklch(0.50 0.22 320 / 0.25)" }} />
-
-      <div className="relative">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
-          style={{ background: "oklch(0.55 0.25 295 / 0.2)", border: "1px solid oklch(0.65 0.22 295 / 0.3)" }}>
-          <span className="text-3xl">👋</span>
-        </div>
-
-        <h2 className="font-display text-3xl font-extrabold tracking-tight">
-          <span className="text-gradient">Welcome!</span>
-        </h2>
-
-        <p className="mt-1 text-xs uppercase tracking-[0.3em]"
-          style={{ color: "oklch(0.65 0.22 295)" }}>
-          — piyush's vibespace —
-        </p>
-
-        <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          Hey there! 🙌 Thanks for visiting my personal space.
-          Take a look around, explore my journey, and don't forget to
-          <span className="text-foreground font-medium"> leave your mark</span> at the end!
-        </p>
-
-        <a
-          href="#notes"
-          onClick={() => { setShowWelcome(false); localStorage.setItem("welcome_seen", String(Date.now())); }}
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
-          style={{ color: "oklch(0.75 0.20 295)" }}
-        >
-          ✍️ Click here to go to notes directly →
-        </a>
-
-        <div className="mt-6 flex gap-3">
-          <button
-            onClick={() => { setShowWelcome(false); localStorage.setItem("welcome_seen", String(Date.now())); }}
-            className="flex-1 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors"
-            style={{ borderColor: "oklch(0.65 0.22 295 / 0.3)", color: "oklch(0.75 0.20 295)" }}
-          >
-            Maybe later
-          </button>
-          <button
-            onClick={() => { setShowWelcome(false); localStorage.setItem("welcome_seen", String(Date.now())); }}
-            className="flex-1 rounded-full px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:shadow-[var(--shadow-glow)]"
-            style={{ background: "linear-gradient(135deg, oklch(0.60 0.25 295), oklch(0.55 0.22 320))" }}
-          >
-            Explore Site ✨
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+{showOnboarding && <VisitorOnboarding onDone={handleOnboarded} />}
 
       {/* HERO */}
       <section className="relative min-h-screen overflow-hidden px-6 pt-24 pb-16 sm:px-10">
