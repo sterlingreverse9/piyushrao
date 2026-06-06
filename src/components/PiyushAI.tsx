@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MessageCircle, X, Send, Sparkles, Mic, MicOff, Volume2, VolumeX, ExternalLink, Lock, Unlock, Trash2, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  getStoredProfile,
+  incrementMessages,
+  loadRecentConversations,
+  saveConversation,
+  type VisitorProfile,
+} from "@/lib/visitorProfile";
 
 
 type Msg = { role: "user" | "assistant"; content: string; ts: number };
 type Knowledge = { id: string; info: string; created_at: string };
+type HistoryItem = { user_message: string; ai_response: string };
 
 const ADMIN_PASSWORD = "qwer123@$()";
 const ADMIN_SESSION_KEY = "piyush.ai.admin.unlocked";
@@ -19,12 +27,15 @@ const SUGGESTED = [
   "Open WhatsApp",
 ];
 
-const GREETING: Msg = {
-  role: "assistant",
-  ts: Date.now(),
-  content:
-    "Hey 👋 I'm Piyush AI.\n\nI'm a digital version of Piyush and can tell you about his journey, hobbies, education, interests, projects, and website.\n\nYou can type or tap the 🎤 to talk — I'll auto-send when you stop speaking and read my reply aloud.",
-};
+function buildGreeting(name?: string): Msg {
+  return {
+    role: "assistant",
+    ts: Date.now(),
+    content: name
+      ? `Hey ${name} 👋 I'm Piyush AI — a digital version of Piyush.\n\nAsk me anything about his journey, hobbies, education, projects, or this site. You can type or tap the 🎤 to talk.`
+      : "Hey 👋 I'm Piyush AI.\n\nI'm a digital version of Piyush and can tell you about his journey, hobbies, education, interests, projects, and website.\n\nYou can type or tap the 🎤 to talk — I'll auto-send when you stop speaking and read my reply aloud.",
+  };
+}
 
 const LINK_MAP: { match: RegExp; url: string }[] = [
   { match: /open\s+telegram|telegram\s+(link|open)/i, url: "https://t.me/mrpuppyx" },
