@@ -56,7 +56,9 @@ function fmtTime(ts: number) {
 
 export function PiyushAI() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [profile, setProfile] = useState<VisitorProfile | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([buildGreeting()]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
@@ -69,6 +71,23 @@ export function PiyushAI() {
   const [pwdError, setPwdError] = useState(false);
   const [newInfo, setNewInfo] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Load visitor profile + recent conversations on mount (client-only)
+  useEffect(() => {
+    const p = getStoredProfile();
+    if (!p) return;
+    setProfile(p);
+    setMessages([buildGreeting(p.name)]);
+    loadRecentConversations(p.visitor_id, 5).then((rows) => {
+      setHistory(
+        rows.map((r: any) => ({
+          user_message: r.user_message ?? "",
+          ai_response: r.ai_response ?? "",
+        }))
+      );
+    });
+  }, []);
+
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
