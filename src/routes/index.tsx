@@ -257,22 +257,47 @@ function StickyNav() {
 }
 
 function Index() {
-const [showWelcome, setShowWelcome] = useState(false);
 const [entered, setEntered] = useState(true);
+const [showOnboarding, setShowOnboarding] = useState(false);
+const [profile, setProfile] = useState<VisitorProfile | null>(null);
+
 useEffect(() => {
-  try {
-    const seen = localStorage.getItem("welcome_seen");
-    setShowWelcome(!(seen && Date.now() - Number(seen) < 50 * 60 * 60 * 1000));
-  } catch { /* ignore */ }
-  setEntered(false);
+  // Client-only bootstrap to avoid SSR/hydration mismatch
+  const p = getStoredProfile();
+  if (p) {
+    setProfile(p);
+    setEntered(true);
+    bumpVisit(p).then((np) => setProfile(np));
+    toast.success(`Welcome back, ${p.name} 👋`, { duration: 3000 });
+  } else {
+    setEntered(false);
+  }
 }, []);
 
-const handleEnter = () => {
-  setEntered(true);
+const startMusic = () => {
   setTimeout(() => {
     const audio = document.querySelector("audio");
     if (audio) audio.play().catch(() => {});
   }, 500);
+};
+
+const handleEnter = () => {
+  const existing = getStoredProfile();
+  if (existing) {
+    setProfile(existing);
+    setEntered(true);
+    startMusic();
+  } else {
+    setShowOnboarding(true);
+  }
+};
+
+const handleOnboarded = (p: VisitorProfile) => {
+  setProfile(p);
+  setShowOnboarding(false);
+  setEntered(true);
+  toast.success(`Welcome, ${p.name}! Your username is @${p.username}`, { duration: 4500 });
+  startMusic();
 };
 
   useReveal();
