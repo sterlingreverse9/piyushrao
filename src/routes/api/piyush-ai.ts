@@ -1,38 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const KNOWLEDGE = `
-PIYUSH KNOWLEDGE BASE (SOURCE OF TRUTH — do not invent anything outside this):
-
-Name: Piyush
-Date of Birth: 26 July 2009 (calculate age dynamically from today)
-Country: India · State: Haryana · District: Mahendergarh · Village: Majra Kalan
-Full location: Majra Kalan, Mahendergarh, Haryana, India
-Home Maps: https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA
-
-Current Education: 12th Standard
-Current School: GMSSSS Mahendergarh
-School Maps: https://maps.app.goo.gl/WUL5FruudtcxSG1A7
-
-Contact:
-- Mobile: +91 83959 51790
-- WhatsApp: https://wa.me/918395951790
-- Telegram: @mrpuppyx — https://t.me/mrpuppyx
-- Instagram: temporary_piyush — https://www.instagram.com/temporary_piyush?igsh=c2R3dHJrbno4Zzl0
-- Email 1: sterlingreverse9@gmail.com
-- Email 2: piyushmajra1975@gmail.com
-
-Hobbies: Gaming, Vibe Coding, Technology, AI Tools, Website Building, Digital Experiments, Minecraft, Creative Projects.
-
-Personality: Curious, Creative, Independent Learner, Tech Enthusiast, Builder, Problem Solver, Internet Explorer, Ambitious, loves Learning and Experimenting.
-
-School History:
-- LKG–1st: RRCM School, Majra Kalan
-- 2nd–3rd: Alliance School, Mahendergarh
-- 4th–5th: MDVN School, Dublana, Narnaul
-- 6th–7th: Jawahar Navodaya Vidyalaya, Karira, Kanina
-- 8th: Aravali School, Mahendergarh
-- 9th–12th: GMSSSS Mahendergarh
-`;
+async function fetchWebsiteKnowledge(): Promise<string> {
+  try {
+    const res = await fetch("https://piyushrao.lovable.app", {
+      headers: { "User-Agent": "PiyushAI-Bot/1.0" },
+    });
+    const html = await res.text();
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 6000);
+    return `LIVE WEBSITE CONTENT (fetched from piyushrao.lovable.app — use as truth):\n${text}`;
+  } catch {
+    return "";
+  }
+}
 
 const SYSTEM_PROMPT = `You are "Piyush AI" — a digital twin of Piyush living inside his personal website. You are not a generic chatbot. You feel like a friendly, smart, slightly casual version of Piyush himself.
 
@@ -41,7 +26,6 @@ LANGUAGES: Reply in whatever the user uses — English, Hindi, Hinglish, or Hary
 ABSOLUTE RULE — NO HALLUCINATIONS:
 - Use ONLY the knowledge base below as truth.
 - Never invent marks, grades, class, achievements, rankings, family details, future plans, or any personal fact not explicitly listed.
-- Never say Piyush is in class 11 — he is in 12th.
 - If asked something not in the knowledge base, reply EXACTLY:
   "I don't have verified information about that yet."
   (You may then suggest a topic you DO know about.)
@@ -58,8 +42,6 @@ SMART LINKS — when the user clearly asks to open/show one of these, include th
 - WhatsApp → https://wa.me/918395951790
 - Home location → https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA
 - School → https://maps.app.goo.gl/WUL5FruudtcxSG1A7
-
-${KNOWLEDGE}
 
 Today's date: ${new Date().toISOString().slice(0, 10)}.`;
 
@@ -81,6 +63,8 @@ export const Route = createFileRoute("/api/piyush-ai")({
           const key = process.env.LOVABLE_API_KEY;
           if (!key) return new Response(JSON.stringify({ error: "Missing API key" }), { status: 500 });
 
+          const websiteKnowledge = await fetchWebsiteKnowledge();
+
           const extraKnowledge = Array.isArray(body.knowledge) && body.knowledge.length
             ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${body.knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
             : "";
@@ -95,7 +79,7 @@ export const Route = createFileRoute("/api/piyush-ai")({
                 .join("\n")}`
             : "";
 
-          const system = SYSTEM_PROMPT + extraKnowledge + visitorBlock + historyBlock;
+          const system = SYSTEM_PROMPT + "\n\n" + websiteKnowledge + extraKnowledge + visitorBlock + historyBlock;
 
           const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
