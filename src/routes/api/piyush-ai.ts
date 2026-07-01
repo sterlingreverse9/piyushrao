@@ -26,6 +26,7 @@ LANGUAGES: Reply in whatever the user uses — English, Hindi, Hinglish, or Hary
 ABSOLUTE RULE — NO HALLUCINATIONS:
 - Use ONLY the knowledge base below as truth.
 - Never invent marks, grades, class, achievements, rankings, family details, future plans, or any personal fact not explicitly listed.
+- Never say Piyush is in class 11 — he is in 12th.
 - If asked something not in the knowledge base, reply EXACTLY:
   "I don't have verified information about that yet."
   (You may then suggest a topic you DO know about.)
@@ -43,21 +44,16 @@ SMART LINKS — when the user clearly asks to open/show one of these, include th
 - Home location → https://maps.app.goo.gl/uiPSPvyV4vPpsc9FA
 - School → https://maps.app.goo.gl/WUL5FruudtcxSG1A7
 
-Today's date: ${new Date().toISOString().slice(0, 10)}.`;
-
-type Visitor = { name?: string; username?: string };
-type HistoryItem = { user_message?: string; ai_response?: string };
+Today's date: __TODAY__.`;
 
 export const Route = createFileRoute("/api/piyush-ai")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = (await request.json()) as {
+          const { messages, knowledge } = (await request.json()) as {
             messages: { role: "user" | "assistant"; content: string }[];
             knowledge?: string[];
-            visitor?: Visitor;
-            history?: HistoryItem[];
           };
 
           const key = process.env.LOVABLE_API_KEY;
@@ -65,28 +61,19 @@ export const Route = createFileRoute("/api/piyush-ai")({
 
           const websiteKnowledge = await fetchWebsiteKnowledge();
 
-          const extraKnowledge = Array.isArray(body.knowledge) && body.knowledge.length
-            ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${body.knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
+          const extraKnowledge = Array.isArray(knowledge) && knowledge.length
+            ? `\n\nADDITIONAL VERIFIED PERSONAL FACTS (added by Piyush via admin panel — treat as truth):\n${knowledge.map((k, i) => `${i + 1}. ${k}`).join("\n")}`
             : "";
 
-          const visitorBlock = body.visitor?.name
-            ? `\n\nVISITOR CONTEXT:\nYou are talking to ${body.visitor.name}${body.visitor.username ? ` (username: ${body.visitor.username})` : ""}. Use their first name occasionally to feel personal.`
-            : "";
-
-          const historyBlock = Array.isArray(body.history) && body.history.length
-            ? `\n\nRECENT CONVERSATION HISTORY WITH THIS VISITOR (oldest first, for continuity — do not repeat verbatim):\n${body.history
-                .map((h, i) => `${i + 1}. ${body.visitor?.name ?? "User"}: ${h.user_message ?? ""}\n   You: ${h.ai_response ?? ""}`)
-                .join("\n")}`
-            : "";
-
-          const system = SYSTEM_PROMPT + "\n\n" + websiteKnowledge + extraKnowledge + visitorBlock + historyBlock;
+          const today = new Date().toISOString().slice(0, 10);
+          const system = SYSTEM_PROMPT.replace("__TODAY__", today) + "\n\n" + websiteKnowledge + extraKnowledge;
 
           const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
-              messages: [{ role: "system", content: system }, ...body.messages.slice(-20)],
+              messages: [{ role: "system", content: system }, ...messages.slice(-20)],
             }),
           });
 
