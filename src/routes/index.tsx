@@ -481,14 +481,17 @@ const handleOnboarded = (p: VisitorProfile) => {
             </div>
           </div>
 
-          <div className="reveal-on-scroll mt-6 grid gap-6 sm:grid-cols-2">
+         <div className="reveal-on-scroll mt-6 grid gap-6 sm:grid-cols-2">
             <HobbyCard Icon={Gamepad2} title="Gaming"
               text="From competitive shooters to chill story-mode nights — gaming is my reset button." />
             <HobbyCard Icon={Code2} title="Vibe Coding"
               text="Half art, half logic. I build things because the idea won't stop bugging me." />
           </div>
+
+          <BirthdayBlock age={age} />  {/* 👈 ADD THIS LINE */}
+
         </div>
-      </section>
+      </section>>
 
       {/* ACADEMICS */}
       <section id="academics" className="relative px-6 py-24 sm:px-10">
