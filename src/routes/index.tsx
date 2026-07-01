@@ -1,3 +1,4 @@
+import { BirthdayBlock } from "@/components/BirthdayBlock";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MemoriesGallery } from "@/components/MemoriesGallery";
